@@ -1,0 +1,14 @@
+Option:
+  Title: Example Shop
+Items:
+  1:
+    Reward:
+      Type: MI
+      Item: SWORD:SILVER_SWORD
+    Quests:
+      1:
+        Type: IA
+        Item: develop:silver_ingot
+      2:
+        Type: VANILLA
+        Item: <serial>

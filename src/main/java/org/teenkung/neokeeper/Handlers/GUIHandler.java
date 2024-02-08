@@ -1,2 +1,4 @@
-package org.teenkung.neokeeper.Handlers;public class GUIHandler {
+package org.teenkung.neokeeper.Handlers;
+
+public class GUIHandler {
 }
