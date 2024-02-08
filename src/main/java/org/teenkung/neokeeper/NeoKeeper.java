@@ -1,8 +1,16 @@
 package org.teenkung.neokeeper;
 
+import de.tr7zw.nbtapi.NBTItem;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.teenkung.neokeeper.Handlers.GUIHandler;
+import org.teenkung.neokeeper.Handlers.TradeHandler;
+import org.teenkung.neokeeper.Managers.InventoryManager;
 
 public final class NeoKeeper extends JavaPlugin {
 
@@ -11,6 +19,8 @@ public final class NeoKeeper extends JavaPlugin {
     public void onEnable() {
         this.shopLoader = new ShopLoader(this);
         shopLoader.loadAllShop();
+        Bukkit.getPluginManager().registerEvents(new GUIHandler(this), this);
+        Bukkit.getPluginManager().registerEvents(new TradeHandler(this), this);
 
         getCommand("neokeeper").setExecutor(new Commands(this));
     }
@@ -56,5 +66,15 @@ public final class NeoKeeper extends JavaPlugin {
         result = result.replaceAll("&r", "<reset>");
 
         return MiniMessage.miniMessage().deserialize(result);
+    }
+
+    public ItemStack getNoItemItem(String id) {
+        ItemStack filItem = new ItemStack(Material.RED_STAINED_GLASS_PANE);
+        ItemMeta meta = filItem.getItemMeta();
+        meta.displayName(Component.text(""));
+        filItem.setItemMeta(meta);
+        NBTItem nbt = new NBTItem(filItem);
+        nbt.setString("NeoShopID", id);
+        return nbt.getItem();
     }
 }

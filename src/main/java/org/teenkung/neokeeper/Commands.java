@@ -15,7 +15,6 @@ public class Commands implements CommandExecutor {
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        sender.sendMessage(plugin.getShopLoader().getAllShopManagers().toString());
         plugin.getShopLoader().getShopManager(
                 plugin.getShopLoader().getAllShopManagers().keySet().iterator().next()
         ).buildGUI((Player) sender);

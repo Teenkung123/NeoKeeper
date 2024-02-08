@@ -39,7 +39,7 @@ public class ShopLoader {
 
         for (File file : files) {
             String fileNameWithoutExtension = file.getName().replaceAll("\\.(yml|yaml)$", "");
-            shopConfigs.put(fileNameWithoutExtension, new ShopManager(plugin, YamlConfiguration.loadConfiguration(file)));
+            shopConfigs.put(fileNameWithoutExtension, new ShopManager(plugin, YamlConfiguration.loadConfiguration(file), fileNameWithoutExtension));
             plugin.getLogger().info("Loaded shop config: " + fileNameWithoutExtension);
         }
 
@@ -65,7 +65,7 @@ public class ShopLoader {
                 YamlConfiguration config = YamlConfiguration.loadConfiguration(newShopFile);
                 config.createSection("Items"); // Create the "Items" section
                 config.save(newShopFile);
-                ShopManager newShop = new ShopManager(plugin, config);
+                ShopManager newShop = new ShopManager(plugin, config, id);
                 shopConfigs.put(id, newShop);
                 plugin.getLogger().info("New shop added with ID: " + id);
                 return true;

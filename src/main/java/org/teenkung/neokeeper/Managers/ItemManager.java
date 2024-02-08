@@ -8,15 +8,19 @@ import org.teenkung.neokeeper.ItemStackSerialization;
 
 public class ItemManager {
 
-    private final String type;
-    private final String item;
-    private final Integer amount;
+    private String type;
+    private String item;
+    private Integer amount;
 
 
     public ItemManager(String type, String item, Integer amount) {
         this.type = type;
         this.item = item;
         this.amount = amount;
+
+        if (this.type == null) { this.type = "NONE"; }
+        if (this.item == null) { this.item = "NONE"; }
+        if (this.type.equalsIgnoreCase("NONE") || this.item.equalsIgnoreCase("NONE")) { amount = 0; };
     }
 
     public ItemManager(ItemStack stack) {
@@ -36,13 +40,15 @@ public class ItemManager {
 
     public ItemStack getItem() {
         ItemStack returnStack;
-        if (this.type.equals("IA")) {
+        if (this.type.equalsIgnoreCase("IA")) {
             returnStack = CustomStack.getInstance(item).getItemStack();
-        } else if (this.type.equals("MI")) {
+        } else if (this.type.equalsIgnoreCase("MI")) {
             String[] args = item.split(":");
             String type = args[0];
             String id = args[1];
             returnStack = MMOItems.plugin.getItem(type, id);
+        } else if (this.type.equalsIgnoreCase("NONE")) {
+            returnStack = null;
         } else {
             returnStack = ItemStackSerialization.deserialize(item);
         }
@@ -52,8 +58,9 @@ public class ItemManager {
         return returnStack;
     }
 
-    protected String getStringItem() { return item; }
-    protected String getType() { return type; }
+    public String getStringItem() { return item; }
+    public String getType() { return type; }
+    public Integer getAmount() { return amount; }
 
 
 }

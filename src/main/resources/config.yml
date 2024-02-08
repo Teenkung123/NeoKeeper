@@ -1,11 +1,11 @@
 GUI:
   Layout:
-    - NNNNBBBBB
+    - NNNBBBBBB
     - EETEBBDBB
     - EETEBBFBB
     - EETEBBBBB
     - EETEBBBBB
-    - PPPPBBBBB
+    - PPPBBBBBB
   Items:
     N:
       Type: VANILLA
@@ -41,11 +41,11 @@ GUI:
     Quest1: 13
     Quest2: 15
     Reward: 33
-    NextPage: [0, 1, 2]
-    PreviousPage: [45, 46, 47]
+    NextPage: [45, 46, 47]
+    PreviousPage: [0, 1, 2]
     #Order: Q1, Q1, Reward
     Lists:
-      - [9, 10, 12]
-      - [18, 19, 21]
-      - [27, 28, 30]
-      - [36, 37, 39]
+      - "9:10:12"
+      - "18:19:21"
+      - "27:28:30"
+      - "36:37:39"
