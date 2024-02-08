@@ -1,0 +1,4 @@
+name: NeoKeeper
+version: '${version}'
+main: org.teenkung.neokeeper.NeoKeeper
+api-version: '1.20'
