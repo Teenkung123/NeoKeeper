@@ -1,4 +1,4 @@
-package org.teenkung.neokeeper.Managers;
+package org.teenkung.neokeeper.Managers.Trades;
 
 import de.tr7zw.nbtapi.NBTItem;
 import dev.lone.itemsadder.api.CustomStack;
@@ -16,13 +16,17 @@ import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
+import org.teenkung.neokeeper.Managers.Edit.EditInventoryManager;
+import org.teenkung.neokeeper.Managers.ItemManager;
 import org.teenkung.neokeeper.NeoKeeper;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class ShopManager {
+public class TradeGUIUtils {
 
     private final YamlConfiguration config;
     FileConfiguration mainConfig;
@@ -30,7 +34,7 @@ public class ShopManager {
     private final String id;
     private final ArrayList<TradeManager> tradeManagers;
     private final List<String> listPerPage;
-    public ShopManager(NeoKeeper plugin, YamlConfiguration config, String id) {
+    public TradeGUIUtils(NeoKeeper plugin, YamlConfiguration config, String id) {
         this.config = config;
         this.plugin = plugin;
         this.tradeManagers = new ArrayList<>();
@@ -46,11 +50,11 @@ public class ShopManager {
         }
     }
 
-    public void buildGUI(Player player) {
+    public void buildTradeGUI(Player player) {
         Inventory inventory = createGUI();
         inventory.setItem(mainConfig.getInt("GUI.Slot.Quest1"), null);
         inventory.setItem(mainConfig.getInt("GUI.Slot.Quest2"), null);
-        inventory.setItem(mainConfig.getInt("GUI.Slot.Reward"), plugin.getNoItemItem(id));
+        inventory.setItem(mainConfig.getInt("GUI.Slot.Reward"), plugin.getNoItemItem());
         player.openInventory(inventory);
         fillSelector(player, 0);
     }
@@ -67,7 +71,7 @@ public class ShopManager {
                 int r = Integer.parseInt(split[2]);
 
                 if (tradeManagers.size() <= offset) {
-                    ItemStack noItem = plugin.getNoItemItem(id);
+                    ItemStack noItem = plugin.getNoItemItem();
                     inv.setItem(q1, noItem);
                     inv.setItem(q2, noItem);
                     inv.setItem(r, noItem);
@@ -76,19 +80,16 @@ public class ShopManager {
                     ItemStack q2Item = tradeManagers.get(offset).getQuest2Item();
                     ItemStack rItem = tradeManagers.get(offset).getRewardItem();
 
-                    if (q1Item == null) { q1Item = plugin.getNoItemItem(id); }
-                    if (q2Item == null) { q2Item = plugin.getNoItemItem(id); }
+                    if (q1Item == null) { q1Item = plugin.getNoItemItem(); }
+                    if (q2Item == null) { q2Item = plugin.getNoItemItem(); }
 
 
                     NBTItem q1NBT = new NBTItem(q1Item);
                     NBTItem q2NBT = new NBTItem(q2Item);
                     NBTItem rNBT = new NBTItem(rItem);
 
-                    q1NBT.setString("NeoShopID", id);
                     q1NBT.setInteger("NeoIndex", offset);
-                    q2NBT.setString("NeoShopID", id);
                     q2NBT.setInteger("NeoIndex", offset);
-                    rNBT.setString("NeoShopID", id);
                     rNBT.setInteger("NeoIndex", offset);
 
                     q1NBT.applyNBT(q1Item);
@@ -107,7 +108,7 @@ public class ShopManager {
     private Inventory createGUI() {
         List<String> layout = mainConfig.getStringList("GUI.Layout");
         int rows = layout.size();
-        Inventory gui = InventoryManager.createPluginInventory(rows * 9, plugin.colorize(config.getString("Option.Title", "Default Shop")));
+        Inventory gui = TradeInventoryManager.createPluginInventory(rows * 9, plugin.colorize(config.getString("Option.Title", "Default Shop")), id);
 
         Objects.requireNonNull(mainConfig.getConfigurationSection("GUI.Items")).getKeys(false).forEach(key -> {
             String path = "GUI.Items." + key;
@@ -120,28 +121,12 @@ public class ShopManager {
 
             ItemStack stack = createItemStack(type, item, display, lore, modelData, amount);
 
-            List<Integer> nextPage = mainConfig.getIntegerList("GUI.Slot.NextPage");
-            List<Integer> previousPage = mainConfig.getIntegerList("GUI.Slot.PreviousPage");
-
-            int slot = 0;
             for (int i = 0; i < rows; i++) {
                 String row = layout.get(i);
                 for (int j = 0; j < row.length(); j++) {
                     if (row.charAt(j) == key.charAt(0)) {
-                        if (nextPage.contains(slot)) {
-                            NBTItem nbt = new NBTItem(stack);
-                            nbt.setBoolean("NeoNextPage", true);
-                            nbt.setInteger("NeoOffset", 0);
-                            nbt.applyNBT(stack);
-                        } else if (previousPage.contains(slot)) {
-                            NBTItem nbt = new NBTItem(stack);
-                            nbt.setBoolean("NeoPreviousPage", true);
-                            nbt.setInteger("NeoOffset", 0);
-                            nbt.applyNBT(stack);
-                        }
                         gui.setItem(i * 9 + j, stack);
                     }
-                    slot++;
                 }
             }
         });
@@ -208,5 +193,79 @@ public class ShopManager {
 
     public ArrayList<TradeManager> getTradeManagers() {
         return tradeManagers;
+    }
+
+    public void buildEditGUI(Player player) {
+        Inventory inv = createEditGUI();
+        player.openInventory(inv);
+    }
+
+    public Inventory createEditGUI() {
+        Inventory inv = EditInventoryManager.createInventory(54, Component.text("Editing: " + id), id);
+        inv.setItem(53, new ItemStack(Material.YELLOW_WOOL));
+        inv.setItem(44, new ItemStack(Material.LIME_WOOL));
+        inv.setItem(35, new ItemStack(Material.RED_WOOL));
+
+        int i = 0;
+        int rewardIndex = 0;
+        int q1Index = 9;
+        int q2Index = 18;
+        for (TradeManager tradeSet : tradeManagers) {
+            i++;
+            if (i == 10) {
+                rewardIndex += 18;
+                q1Index += 18;
+                q2Index += 18;
+            }
+
+            inv.setItem(rewardIndex, tradeSet.getRewardItem());
+            inv.setItem(q1Index, tradeSet.getQuest1Item());
+            inv.setItem(q2Index, tradeSet.getQuest2Item());
+
+            rewardIndex++;
+            q1Index++;
+            q2Index++;
+        }
+        return inv;
+    }
+    public void saveEdit(Inventory inv) {
+        config.set("Items", null);
+        int index = 0;
+        for (int i = 0; i < 16 ; i++) {
+            if (index == 9) {
+                index += 18;
+            }
+
+            int rewardSlot = index;
+            int q1Slot = index+9;
+            int q2Slot = index+18;
+
+            if (inv.getItem(index) == null) {
+                index++;
+                continue;
+            }
+            ConfigurationSection section = config.createSection("Items."+i);
+            ItemManager rewardItem = new ItemManager(inv.getItem(rewardSlot));
+            ItemManager q1Item = new ItemManager(inv.getItem(q1Slot));
+            ItemManager q2Item = new ItemManager(inv.getItem(q2Slot));
+
+            setSection(section, "Reward", rewardItem);
+            setSection(section, "Quests.1", q1Item);
+            setSection(section, "Quests.2", q2Item);
+
+            index++;
+        }
+        try {
+            config.save(new File(plugin.getDataFolder(), "Shops/"+id+".yml"));
+            plugin.reload();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void setSection(ConfigurationSection section, String path,ItemManager item) {
+        section.set(path+".Type", item.getType());
+        section.set(path+".Item", item.getStringItem());
+        section.set(path+".Amount", item.getAmount());
     }
 }

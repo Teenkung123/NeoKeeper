@@ -5,32 +5,66 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.command.PluginCommand;
+import org.bukkit.entity.HumanEntity;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.teenkung.neokeeper.Handlers.GUIHandler;
-import org.teenkung.neokeeper.Handlers.TradeHandler;
-import org.teenkung.neokeeper.Managers.InventoryManager;
+import org.teenkung.neokeeper.Commands.CommandTabComplete;
+import org.teenkung.neokeeper.Commands.CommandsHandler;
+import org.teenkung.neokeeper.Handlers.EditGUIHandler;
+import org.teenkung.neokeeper.Handlers.TradeGUIHandler;
+import org.teenkung.neokeeper.Managers.Edit.EditInventoryManager;
+import org.teenkung.neokeeper.Managers.InventoriesLoader;
+import org.teenkung.neokeeper.Managers.Trades.TradeInventoryManager;
 
 public final class NeoKeeper extends JavaPlugin {
 
-    private ShopLoader shopLoader;
+    private InventoriesLoader shopLoader;
+    private ConfigLoader configLoader;
     @Override
     public void onEnable() {
-        this.shopLoader = new ShopLoader(this);
+        this.configLoader = new ConfigLoader(this);
+        this.shopLoader = new InventoriesLoader(this);
         shopLoader.loadAllShop();
-        Bukkit.getPluginManager().registerEvents(new GUIHandler(this), this);
-        Bukkit.getPluginManager().registerEvents(new TradeHandler(this), this);
 
-        getCommand("neokeeper").setExecutor(new Commands(this));
+        Bukkit.getPluginManager().registerEvents(new TradeGUIHandler(this), this);
+        Bukkit.getPluginManager().registerEvents(new EditGUIHandler(this), this);
+
+        PluginCommand cmd = getCommand("neokeeper");
+        if (cmd != null) {
+            cmd.setExecutor(new CommandsHandler(this));
+            cmd.setTabCompleter(new CommandTabComplete(this));
+        } else {
+            getLogger().severe("Could not register the plugin commands! Disabling Plugin. . .");
+            Bukkit.getPluginManager().disablePlugin(this);
+        }
     }
 
     @Override
     public void onDisable() {
-        // Plugin shutdown logic
+        for (Inventory inv : EditInventoryManager.getAllInventories().keySet()) {
+            for (HumanEntity entity : inv.getViewers()) {
+                entity.closeInventory();
+            }
+        }
+
+        for (Inventory inv : TradeInventoryManager.getAllInventories().keySet()) {
+            for (HumanEntity entity : inv.getViewers()) {
+                entity.closeInventory();
+            }
+        }
     }
 
-    public ShopLoader getShopLoader() { return shopLoader; }
+    public void reload() {
+        this.configLoader = new ConfigLoader(this);
+        this.shopLoader = new InventoriesLoader(this);
+        shopLoader.loadAllShop();
+    }
+
+    public InventoriesLoader getShopLoader() { return shopLoader; }
+    public ConfigLoader getConfigLoader() { return configLoader; }
 
     /**
      * Transforms Minecraft color codes in a string to mini messages color format.
@@ -68,13 +102,13 @@ public final class NeoKeeper extends JavaPlugin {
         return MiniMessage.miniMessage().deserialize(result);
     }
 
-    public ItemStack getNoItemItem(String id) {
+    public ItemStack getNoItemItem() {
         ItemStack filItem = new ItemStack(Material.RED_STAINED_GLASS_PANE);
         ItemMeta meta = filItem.getItemMeta();
         meta.displayName(Component.text(""));
         filItem.setItemMeta(meta);
         NBTItem nbt = new NBTItem(filItem);
-        nbt.setString("NeoShopID", id);
+        nbt.setBoolean("NeoShopID", true);
         return nbt.getItem();
     }
 }

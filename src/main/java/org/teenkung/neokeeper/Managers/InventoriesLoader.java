@@ -1,28 +1,29 @@
-package org.teenkung.neokeeper;
+package org.teenkung.neokeeper.Managers;
 
 import org.bukkit.configuration.file.YamlConfiguration;
 
-import org.teenkung.neokeeper.Managers.ShopManager;
+import org.teenkung.neokeeper.Managers.Trades.TradeGUIUtils;
+import org.teenkung.neokeeper.NeoKeeper;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ShopLoader {
+public class InventoriesLoader {
 
     private NeoKeeper plugin;
-    private Map<String, ShopManager> shopConfigs;
     private final File shopsFolder;
+    private Map<String, TradeGUIUtils> tradeUtils;
 
-    public ShopLoader(NeoKeeper plugin) {
+    public InventoriesLoader(NeoKeeper plugin) {
 
         this.plugin = plugin;
         this.shopsFolder = new File(plugin.getDataFolder(), "Shops");
     }
 
     public void loadAllShop() {
-        this.shopConfigs = new HashMap<>();
+        this.tradeUtils = new HashMap<>();
         if (!shopsFolder.exists()) {
             plugin.getLogger().info("Shops folder does not exist. Creating new one...");
             if (!shopsFolder.mkdirs()) { // Attempt to create the folder
@@ -39,14 +40,19 @@ public class ShopLoader {
 
         for (File file : files) {
             String fileNameWithoutExtension = file.getName().replaceAll("\\.(yml|yaml)$", "");
-            shopConfigs.put(fileNameWithoutExtension, new ShopManager(plugin, YamlConfiguration.loadConfiguration(file), fileNameWithoutExtension));
+            YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+            tradeUtils.put(fileNameWithoutExtension, new TradeGUIUtils(plugin, config, fileNameWithoutExtension));
             plugin.getLogger().info("Loaded shop config: " + fileNameWithoutExtension);
         }
 
-        plugin.getLogger().info("Loaded all shop configs. Total: " + shopConfigs.size());
+        plugin.getLogger().info("Loaded all shop configs. Total: " + tradeUtils.size());
     }
 
-    public boolean addShop(String id) {
+    public Map<String, TradeGUIUtils> getAllTradeManagers() { return tradeUtils; }
+    public TradeGUIUtils getTradeManager(String id) { return tradeUtils.getOrDefault(id, null); }
+
+
+    public boolean addShop(String id, String name) {
         if (!shopsFolder.exists()) {
             plugin.getLogger().info("Shops folder does not exist. Creating new one...");
             if (!shopsFolder.mkdirs()) {
@@ -63,10 +69,12 @@ public class ShopLoader {
                     return false;
                 }
                 YamlConfiguration config = YamlConfiguration.loadConfiguration(newShopFile);
+                config.createSection("Option");
+                config.set("Option.Title", name);
                 config.createSection("Items"); // Create the "Items" section
                 config.save(newShopFile);
-                ShopManager newShop = new ShopManager(plugin, config, id);
-                shopConfigs.put(id, newShop);
+                TradeGUIUtils newShop = new TradeGUIUtils(plugin, config, id);
+                tradeUtils.put(id, newShop);
                 plugin.getLogger().info("New shop added with ID: " + id);
                 return true;
             } catch (IOException e) {
@@ -82,7 +90,7 @@ public class ShopLoader {
         File shopFile = new File(shopsFolder, id + ".yml");
         if (shopFile.exists()) {
             if (shopFile.delete()) {
-                shopConfigs.remove(id);
+                tradeUtils.remove(id);
                 plugin.getLogger().info("Shop removed with ID: " + id);
                 return true;
             } else {
@@ -93,7 +101,4 @@ public class ShopLoader {
         }
         return false;
     }
-
-    public Map<String, ShopManager> getAllShopManagers() { return shopConfigs; }
-    public ShopManager getShopManager(String id) { return shopConfigs.getOrDefault(id, null); }
 }
