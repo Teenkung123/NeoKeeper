@@ -96,16 +96,15 @@ public final class NeoKeeper extends JavaPlugin {
         result = result.replaceAll("&l", "<bold>");
         result = result.replaceAll("&m", "<strikethrough>");
         result = result.replaceAll("&n", "<underline>");
-        result = result.replaceAll("&o", "<italic>");
         result = result.replaceAll("&r", "<reset>");
-
-        return MiniMessage.miniMessage().deserialize(result);
+        return MiniMessage.miniMessage().deserialize("<i:false>"+result);
     }
 
     public ItemStack getNoItemItem() {
-        ItemStack filItem = new ItemStack(Material.RED_STAINED_GLASS_PANE);
+        ItemStack filItem = new ItemStack(Material.YELLOW_DYE);
         ItemMeta meta = filItem.getItemMeta();
         meta.displayName(Component.text(""));
+        meta.setCustomModelData(2);
         filItem.setItemMeta(meta);
         NBTItem nbt = new NBTItem(filItem);
         nbt.setBoolean("NeoShopID", true);

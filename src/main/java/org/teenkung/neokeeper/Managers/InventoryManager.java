@@ -1,11 +1,10 @@
-package org.teenkung.neokeeper.Managers.Trades;
+package org.teenkung.neokeeper.Managers;
 
 import de.tr7zw.nbtapi.NBTItem;
 import dev.lone.itemsadder.api.CustomStack;
 import net.Indyuce.mmoitems.MMOItems;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -18,6 +17,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 import org.teenkung.neokeeper.Managers.Edit.EditInventoryManager;
 import org.teenkung.neokeeper.Managers.ItemManager;
+import org.teenkung.neokeeper.Managers.Trades.TradeInventoryManager;
+import org.teenkung.neokeeper.Managers.Trades.TradeManager;
 import org.teenkung.neokeeper.NeoKeeper;
 
 import java.io.File;
@@ -26,7 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class TradeGUIUtils {
+public class InventoryManager {
 
     private final YamlConfiguration config;
     FileConfiguration mainConfig;
@@ -34,7 +35,7 @@ public class TradeGUIUtils {
     private final String id;
     private final ArrayList<TradeManager> tradeManagers;
     private final List<String> listPerPage;
-    public TradeGUIUtils(NeoKeeper plugin, YamlConfiguration config, String id) {
+    public InventoryManager(NeoKeeper plugin, YamlConfiguration config, String id) {
         this.config = config;
         this.plugin = plugin;
         this.tradeManagers = new ArrayList<>();
@@ -60,48 +61,53 @@ public class TradeGUIUtils {
     }
 
     public void fillSelector(Player player, Integer offset) {
-        TextComponent title = (TextComponent) player.getOpenInventory().title();
-        if (title.content().equalsIgnoreCase(config.getString("Option.Title", "Default Shop"))) {
+        if (TradeInventoryManager.isPluginInventory(player.getOpenInventory().getTopInventory())) {
             InventoryView inv = player.getOpenInventory();
-
             for (String set : listPerPage) {
-                String[] split = set.split(":");
-                int q1 = Integer.parseInt(split[0]);
-                int q2 = Integer.parseInt(split[1]);
-                int r = Integer.parseInt(split[2]);
+                try {
+                    String[] split = set.split(":");
+                    int q1 = Integer.parseInt(split[0]);
+                    int q2 = Integer.parseInt(split[1]);
+                    int r = Integer.parseInt(split[2]);
 
-                if (tradeManagers.size() <= offset) {
-                    ItemStack noItem = plugin.getNoItemItem();
-                    inv.setItem(q1, noItem);
-                    inv.setItem(q2, noItem);
-                    inv.setItem(r, noItem);
-                } else {
-                    ItemStack q1Item = tradeManagers.get(offset).getQuest1Item();
-                    ItemStack q2Item = tradeManagers.get(offset).getQuest2Item();
-                    ItemStack rItem = tradeManagers.get(offset).getRewardItem();
+                    if (tradeManagers.size() <= offset) {
+                        ItemStack noItem = plugin.getNoItemItem();
+                        inv.setItem(q1, noItem);
+                        inv.setItem(q2, noItem);
+                        inv.setItem(r, noItem);
+                    } else {
+                        ItemStack q1Item = tradeManagers.get(offset).getQuest1Item();
+                        ItemStack q2Item = tradeManagers.get(offset).getQuest2Item();
+                        ItemStack rItem = tradeManagers.get(offset).getRewardItem();
 
-                    if (q1Item == null) { q1Item = plugin.getNoItemItem(); }
-                    if (q2Item == null) { q2Item = plugin.getNoItemItem(); }
+                        if (q1Item == null) {
+                            q1Item = plugin.getNoItemItem();
+                        }
+                        if (q2Item == null) {
+                            q2Item = plugin.getNoItemItem();
+                        }
 
 
-                    NBTItem q1NBT = new NBTItem(q1Item);
-                    NBTItem q2NBT = new NBTItem(q2Item);
-                    NBTItem rNBT = new NBTItem(rItem);
+                        NBTItem q1NBT = new NBTItem(q1Item);
+                        NBTItem q2NBT = new NBTItem(q2Item);
+                        NBTItem rNBT = new NBTItem(rItem);
 
-                    q1NBT.setInteger("NeoIndex", offset);
-                    q2NBT.setInteger("NeoIndex", offset);
-                    rNBT.setInteger("NeoIndex", offset);
+                        q1NBT.setInteger("NeoIndex", offset);
+                        q2NBT.setInteger("NeoIndex", offset);
+                        rNBT.setInteger("NeoIndex", offset);
 
-                    q1NBT.applyNBT(q1Item);
-                    q2NBT.applyNBT(q2Item);
-                    rNBT.applyNBT(rItem);
+                        q1NBT.applyNBT(q1Item);
+                        q2NBT.applyNBT(q2Item);
+                        rNBT.applyNBT(rItem);
 
-                    inv.setItem(q1, q1Item);
-                    inv.setItem(q2, q2Item);
-                    inv.setItem(r, rItem);
-                    offset++;
+                        inv.setItem(q1, q1Item);
+                        inv.setItem(q2, q2Item);
+                        inv.setItem(r, rItem);
+                        offset++;
+                    }
+                } catch (IndexOutOfBoundsException ignored) {
+
                 }
-
             }
         }
     }

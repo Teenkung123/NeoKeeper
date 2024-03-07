@@ -2,7 +2,6 @@ package org.teenkung.neokeeper.Handlers;
 
 import de.tr7zw.nbtapi.NBTItem;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -15,7 +14,7 @@ import org.bukkit.inventory.ItemStack;
 import org.teenkung.neokeeper.ConfigLoader;
 import org.teenkung.neokeeper.Managers.ItemManager;
 import org.teenkung.neokeeper.Managers.Trades.TradeInventoryManager;
-import org.teenkung.neokeeper.Managers.Trades.TradeGUIUtils;
+import org.teenkung.neokeeper.Managers.InventoryManager;
 import org.teenkung.neokeeper.Managers.Trades.TradeInventoryStorage;
 import org.teenkung.neokeeper.Managers.Trades.TradeManager;
 import org.teenkung.neokeeper.NeoKeeper;
@@ -50,22 +49,22 @@ public class TradeGUIHandler implements Listener {
             Player player = (Player) event.getWhoClicked();
             Integer offset = invStorage.offset();
             String id = invStorage.id();
-            TradeGUIUtils tradeGUIUtils = plugin.getShopLoader().getTradeManager(id);
+            InventoryManager inventoryManager = plugin.getShopLoader().getTradeManager(id);
             if (config.getNextPageSlots().contains(event.getSlot())) {
-                offset = Math.min(tradeGUIUtils.getTradeManagers().size() - 4, offset + config.getSelectorSlots().size());
+                offset = Math.min(inventoryManager.getTradeManagers().size() - 4, offset + config.getSelectorSlots().size());
                 invStorage.offset(offset);
-                tradeGUIUtils.fillSelector(player, offset);
+                inventoryManager.fillSelector(player, offset);
             } else if (config.getPreviousPageSlots().contains(event.getSlot())) {
                 offset = Math.max(0, offset - config.getSelectorSlots().size());
                 invStorage.offset(offset);
-                tradeGUIUtils.fillSelector(player, offset);
+                inventoryManager.fillSelector(player, offset);
             } else if (config.getAllSelectors().contains(event.getSlot())) {
                 player.playSound(player, Sound.BLOCK_DISPENSER_DISPENSE, 1, 1);
                 NBTItem nbt = new NBTItem(event.getCurrentItem());
                 if (!nbt.hasTag("NeoIndex")) { return; }
                 Integer index = nbt.getInteger("NeoIndex");
                 invStorage.selecting(index);
-                performTrade(player,inv, invStorage, id, tradeGUIUtils);
+                performTrade(player,inv, invStorage, id, inventoryManager);
             } else if (config.getRewardSlot().equals(event.getSlot())) {
                 ItemStack clickedItems = event.getCurrentItem();
                 NBTItem nbt = new NBTItem(clickedItems);
@@ -80,8 +79,8 @@ public class TradeGUIHandler implements Listener {
         }
     }
 
-    private void performTrade(Player player, Inventory inv, TradeInventoryStorage invStorage, String id, TradeGUIUtils tradeGUIUtils) {
-        TradeManager tradeManager = tradeGUIUtils.getTradeManagers().get(invStorage.selecting());
+    private void performTrade(Player player, Inventory inv, TradeInventoryStorage invStorage, String id, InventoryManager inventoryManager) {
+        TradeManager tradeManager = inventoryManager.getTradeManagers().get(invStorage.selecting());
         ItemManager req1Manager = tradeManager.getQuest1Manager();
         ItemManager req2Manager = tradeManager.getQuest2Manager();
         String req1Type = req1Manager.getType();
