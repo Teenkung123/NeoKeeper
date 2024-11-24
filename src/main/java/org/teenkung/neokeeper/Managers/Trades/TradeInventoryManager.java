@@ -3,7 +3,6 @@ package org.teenkung.neokeeper.Managers.Trades;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.inventory.Inventory;
-import org.teenkung.neokeeper.Managers.Edit.EditInventoryStorage;
 
 import java.util.HashMap;
 import java.util.Map;

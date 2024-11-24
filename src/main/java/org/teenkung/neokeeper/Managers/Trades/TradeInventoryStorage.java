@@ -11,7 +11,6 @@ public class TradeInventoryStorage {
         this.selecting = 0;
     }
 
-    // Assuming you have getters here
 
     public void selecting(Integer index) { this.selecting = index; }
     public Integer selecting() { return this.selecting; }

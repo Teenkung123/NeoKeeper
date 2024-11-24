@@ -1,13 +1,11 @@
 package org.teenkung.neokeeper.Managers;
 
-import de.tr7zw.nbtapi.NBTItem;
+import de.tr7zw.nbtapi.NBT;
 import dev.lone.itemsadder.api.CustomStack;
 import net.Indyuce.mmoitems.MMOItems;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -16,7 +14,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 import org.teenkung.neokeeper.Managers.Edit.EditInventoryManager;
-import org.teenkung.neokeeper.Managers.ItemManager;
 import org.teenkung.neokeeper.Managers.Trades.TradeInventoryManager;
 import org.teenkung.neokeeper.Managers.Trades.TradeManager;
 import org.teenkung.neokeeper.NeoKeeper;
@@ -30,7 +27,6 @@ import java.util.Objects;
 public class InventoryManager {
 
     private final YamlConfiguration config;
-    FileConfiguration mainConfig;
     private final NeoKeeper plugin;
     private final String id;
     private final ArrayList<TradeManager> tradeManagers;
@@ -39,9 +35,8 @@ public class InventoryManager {
         this.config = config;
         this.plugin = plugin;
         this.tradeManagers = new ArrayList<>();
-        this.mainConfig = plugin.getConfig();
         this.id = id;
-        this.listPerPage = mainConfig.getStringList("GUI.Slot.Lists");
+        this.listPerPage = plugin.getConfigLoader().getSelectorSlots();
 
         ConfigurationSection section = config.getConfigurationSection("Items");
         if (section != null) {
@@ -53,9 +48,9 @@ public class InventoryManager {
 
     public void buildTradeGUI(Player player) {
         Inventory inventory = createGUI();
-        inventory.setItem(mainConfig.getInt("GUI.Slot.Quest1"), null);
-        inventory.setItem(mainConfig.getInt("GUI.Slot.Quest2"), null);
-        inventory.setItem(mainConfig.getInt("GUI.Slot.Reward"), plugin.getNoItemItem());
+        inventory.setItem(plugin.getConfigLoader().getQuest1Slot(), null);
+        inventory.setItem(plugin.getConfigLoader().getQuest2Slot(), null);
+        inventory.setItem(plugin.getConfigLoader().getRewardSlot(), plugin.getNoItemItem());
         player.openInventory(inventory);
         fillSelector(player, 0);
     }
@@ -87,18 +82,16 @@ public class InventoryManager {
                             q2Item = plugin.getNoItemItem();
                         }
 
-
-                        NBTItem q1NBT = new NBTItem(q1Item);
-                        NBTItem q2NBT = new NBTItem(q2Item);
-                        NBTItem rNBT = new NBTItem(rItem);
-
-                        q1NBT.setInteger("NeoIndex", offset);
-                        q2NBT.setInteger("NeoIndex", offset);
-                        rNBT.setInteger("NeoIndex", offset);
-
-                        q1NBT.applyNBT(q1Item);
-                        q2NBT.applyNBT(q2Item);
-                        rNBT.applyNBT(rItem);
+                        Integer finalOffset = offset;
+                        NBT.modify(q1Item, (nbt) -> {
+                            nbt.setInteger("NeoIndex", finalOffset);
+                        });
+                        NBT.modify(q2Item, (nbt) -> {
+                            nbt.setInteger("NeoIndex", finalOffset);
+                        });
+                        NBT.modify(rItem, (nbt) -> {
+                            nbt.setInteger("NeoIndex", finalOffset);
+                        });
 
                         inv.setItem(q1, q1Item);
                         inv.setItem(q2, q2Item);
@@ -112,18 +105,17 @@ public class InventoryManager {
         }
     }
     private Inventory createGUI() {
-        List<String> layout = mainConfig.getStringList("GUI.Layout");
+        List<String> layout = plugin.getConfigLoader().getGUILayout();
         int rows = layout.size();
         Inventory gui = TradeInventoryManager.createPluginInventory(rows * 9, plugin.colorize(config.getString("Option.Title", "Default Shop")), id);
-
-        Objects.requireNonNull(mainConfig.getConfigurationSection("GUI.Items")).getKeys(false).forEach(key -> {
-            String path = "GUI.Items." + key;
-            String type = mainConfig.getString(path + ".Type", "VANILLA").toUpperCase();
-            String item = mainConfig.getString(path + ".Item", "STONE");
-            String display = mainConfig.getString(path + ".Display");
-            List<String> lore = mainConfig.getStringList(path + ".Lore");
-            int modelData = mainConfig.getInt(path + ".ModelData", 0);
-            int amount = mainConfig.getInt(path + ".Amount", 1);
+        ConfigurationSection section = plugin.getConfigLoader().getGUIItemsSection();
+        section.getKeys(false).forEach(key -> {
+            String type = section.getString(key + ".Type", "VANILLA").toUpperCase();
+            String item = section.getString(key + ".Item", "STONE");
+            String display = section.getString(key + ".Display");
+            List<String> lore = section.getStringList(key +".Lore");
+            int modelData = section.getInt(key + ".ModelData", 0);
+            int amount = section.getInt(key + ".Amount", 1);
 
             ItemStack stack = createItemStack(type, item, display, lore, modelData, amount);
 
@@ -144,7 +136,10 @@ public class InventoryManager {
         ItemStack stack = new ItemStack(Material.COBBLESTONE);
         if (type.equalsIgnoreCase("Vanilla")) {
             Material material = Material.getMaterial(item);
-            if (material == null) material = Material.BARRIER;
+            if (material == null) {
+                plugin.getLogger().warning("Material "+item+" not found in Bukkit.");
+                material = Material.BARRIER;
+            }
             // Create a vanilla item stack using Bukkit API.
             ItemStack tempStack = new ItemStack(material, amount);
             stack = setItemMeta(display, lore, modelData, amount, stack, tempStack);
@@ -154,24 +149,25 @@ public class InventoryManager {
             String id = typeId[1];
             ItemStack tempStack = MMOItems.plugin.getItem(mmoType, id);
             if (tempStack == null) {
+                plugin.getLogger().warning("Item "+id+" not found in MMOItems.");
                 tempStack = new ItemStack(Material.STONE);
             }
             stack = setItemMeta(display, lore, modelData, amount, stack, tempStack);
         } else if (type.equalsIgnoreCase("IA")) {
-            ItemStack tempStack;
-            try {
-                tempStack = CustomStack.getInstance(item).getItemStack();
-            } catch (NullPointerException e) {
-                tempStack = new ItemStack(Material.STONE);
+            CustomStack customStack = CustomStack.getInstance(item);
+            if (customStack == null) {
+                plugin.getLogger().warning("Item "+item+" not found in ItemsAdder.");
+                stack = new ItemStack(Material.STONE);
+            } else {
+                stack = setItemMeta(display, lore, modelData, amount, stack, customStack.getItemStack());
             }
-            stack = setItemMeta(display, lore, modelData, amount, stack, tempStack);
         } else {
             stack = new ItemStack(Material.STONE);
             stack.setAmount(amount);
         }
-        NBTItem nbt = new NBTItem(stack);
-        nbt.setString("NeoShopID", id);
-        nbt.applyNBT(stack);
+        NBT.modify(stack, (nbt) -> {
+            nbt.setString("NeoShopID", id);
+        });
         return stack;
     }
 

@@ -1,17 +1,18 @@
 package org.teenkung.neokeeper.Managers;
 
-import com.google.inject.internal.Nullable;
 import dev.lone.itemsadder.api.CustomStack;
 import io.lumine.mythic.lib.api.item.NBTItem;
 import net.Indyuce.mmoitems.MMOItems;
 import org.bukkit.inventory.ItemStack;
 import org.teenkung.neokeeper.ItemStackSerialization;
 
+import javax.annotation.Nullable;
+
 public class ItemManager {
 
     private String type;
     private String item;
-    private String itemDisplay;
+    private final String itemDisplay;
     private Integer amount;
 
 

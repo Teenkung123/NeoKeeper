@@ -24,6 +24,9 @@ public class CommandTabComplete implements TabCompleter {
             result.add("edit");
             result.add("open");
             result.add("help");
+            result.add("reload");
+            result.add("create");
+            result.add("remove");
         } else if (args.length == 2) {
             String arg = args[0].toLowerCase();
             if (arg.equalsIgnoreCase("edit") || arg.equalsIgnoreCase("open")) {

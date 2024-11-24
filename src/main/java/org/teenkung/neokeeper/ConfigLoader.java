@@ -12,6 +12,8 @@ public class ConfigLoader {
     private final ArrayList<Integer> allSelectors = new ArrayList<>();
 
     public ConfigLoader(NeoKeeper plugin) {
+        plugin.saveDefaultConfig();
+        plugin.reloadConfig();
         this.config = plugin.getConfig();
 
         List<String> selectors = getSelectorSlots();

@@ -1,5 +1,6 @@
 package org.teenkung.neokeeper;
 
+import de.tr7zw.nbtapi.NBT;
 import de.tr7zw.nbtapi.NBTItem;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -15,6 +16,7 @@ import org.teenkung.neokeeper.Commands.CommandTabComplete;
 import org.teenkung.neokeeper.Commands.CommandsHandler;
 import org.teenkung.neokeeper.Handlers.EditGUIHandler;
 import org.teenkung.neokeeper.Handlers.TradeGUIHandler;
+import org.teenkung.neokeeper.Handlers.TradeGUIHandler2;
 import org.teenkung.neokeeper.Managers.Edit.EditInventoryManager;
 import org.teenkung.neokeeper.Managers.InventoriesLoader;
 import org.teenkung.neokeeper.Managers.Trades.TradeInventoryManager;
@@ -29,7 +31,7 @@ public final class NeoKeeper extends JavaPlugin {
         this.shopLoader = new InventoriesLoader(this);
         shopLoader.loadAllShop();
 
-        Bukkit.getPluginManager().registerEvents(new TradeGUIHandler(this), this);
+        Bukkit.getPluginManager().registerEvents(new TradeGUIHandler2(this), this);
         Bukkit.getPluginManager().registerEvents(new EditGUIHandler(this), this);
 
         PluginCommand cmd = getCommand("neokeeper");
@@ -106,8 +108,9 @@ public final class NeoKeeper extends JavaPlugin {
         meta.displayName(Component.text(""));
         meta.setCustomModelData(2);
         filItem.setItemMeta(meta);
-        NBTItem nbt = new NBTItem(filItem);
-        nbt.setBoolean("NeoShopID", true);
-        return nbt.getItem();
+        NBT.modify(filItem, (item) -> {
+            item.setBoolean("NeoShopID", true);
+        });
+        return filItem;
     }
 }

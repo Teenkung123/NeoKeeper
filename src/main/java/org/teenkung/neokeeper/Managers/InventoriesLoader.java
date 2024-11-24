@@ -11,7 +11,7 @@ import java.util.Map;
 
 public class InventoriesLoader {
 
-    private NeoKeeper plugin;
+    private final NeoKeeper plugin;
     private final File shopsFolder;
     private Map<String, InventoryManager> tradeUtils;
 
@@ -70,7 +70,7 @@ public class InventoriesLoader {
                 YamlConfiguration config = YamlConfiguration.loadConfiguration(newShopFile);
                 config.createSection("Option");
                 config.set("Option.Title", name);
-                config.createSection("Items"); // Create the "Items" section
+                config.createSection("Items");
                 config.save(newShopFile);
                 InventoryManager newShop = new InventoryManager(plugin, config, id);
                 tradeUtils.put(id, newShop);

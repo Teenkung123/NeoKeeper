@@ -1,5 +1,6 @@
 package org.teenkung.neokeeper.Handlers;
 
+import de.tr7zw.nbtapi.NBT;
 import de.tr7zw.nbtapi.NBTItem;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -60,21 +61,25 @@ public class TradeGUIHandler implements Listener {
                 inventoryManager.fillSelector(player, offset);
             } else if (config.getAllSelectors().contains(event.getSlot())) {
                 player.playSound(player, Sound.BLOCK_DISPENSER_DISPENSE, 1, 1);
-                NBTItem nbt = new NBTItem(event.getCurrentItem());
-                if (!nbt.hasTag("NeoIndex")) { return; }
-                Integer index = nbt.getInteger("NeoIndex");
-                invStorage.selecting(index);
-                performTrade(player,inv, invStorage, id, inventoryManager);
+                NBT.get(event.getCurrentItem(), nbt -> {
+                    if (!nbt.hasTag("NeoIndex")) {
+                        return;
+                    }
+                    int index = nbt.getInteger("NeoIndex");
+                    invStorage.selecting(index);
+                    performTrade(player,inv, invStorage, id, inventoryManager);
+                });
             } else if (config.getRewardSlot().equals(event.getSlot())) {
                 ItemStack clickedItems = event.getCurrentItem();
-                NBTItem nbt = new NBTItem(clickedItems);
-                if (nbt.hasTag("NeoShopID")) {
-                    event.setCancelled(true);
-                } else {
-                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                        if (inv.getItem(config.getRewardSlot()) == null) { inv.setItem(config.getRewardSlot(), plugin.getNoItemItem()); }
-                    }, 1);
-                }
+                NBT.get(clickedItems, nbt -> {
+                    if (nbt.hasTag("NeoShopID")) {
+                        event.setCancelled(true);
+                    } else {
+                        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                            if (inv.getItem(config.getRewardSlot()) == null) { inv.setItem(config.getRewardSlot(), plugin.getNoItemItem()); }
+                        }, 1);
+                    }
+                });
             }
         }
     }
@@ -124,8 +129,10 @@ public class TradeGUIHandler implements Listener {
             ItemManager rewardManager = tradeManager.getRewardManager();
             if (rewardSlot != null) {
                 ItemManager rewardSlotManager = new ItemManager(rewardSlot);
-                NBTItem rewardSlotNBT = new NBTItem(rewardSlot);
-                if (rewardSlotNBT.hasTag("NeoShopID")) {
+                boolean has = NBT.get(rewardSlot, nbt -> {
+                    return nbt.hasTag("NeoShopID");
+                });
+                if (has) {
                     inv.setItem(config.getRewardSlot(), reward);
                 } else if ((rewardManager.getStringItem().equalsIgnoreCase(rewardSlotManager.getStringItem())) && (rewardManager.getType().equalsIgnoreCase(rewardSlotManager.getType()))) {
                     if (rewardSlot.getAmount() + reward.getAmount() <= 64) {
@@ -151,8 +158,11 @@ public class TradeGUIHandler implements Listener {
             }
         } else {
             if (rewardSlot != null) {
-                NBTItem rewardSlotNBT = new NBTItem(rewardSlot);
-                if (rewardSlotNBT.hasTag("NeoShopID")) {
+
+                boolean has = NBT.get(rewardSlot, nbt -> {
+                    return nbt.hasTag("NeoShopID");
+                });
+                if (has) {
                     inv.setItem(config.getRewardSlot(), plugin.getNoItemItem());
                 } else {
                     player.getInventory().addItem(rewardSlot);
@@ -174,10 +184,11 @@ public class TradeGUIHandler implements Listener {
             if (q1 != null) { event.getPlayer().getInventory().addItem(q1); }
             if (q2 != null) { event.getPlayer().getInventory().addItem(q2); }
             if (r != null) {
-                NBTItem nbt = new NBTItem(r);
-                if (!nbt.hasTag("NeoShopID")) {
-                    event.getPlayer().getInventory().addItem(r);
-                }
+                NBT.get(r, nbt -> {
+                    if (!nbt.hasTag("NeoShopID")) {
+                        event.getPlayer().getInventory().addItem(r);
+                    }
+                });
             }
 
 

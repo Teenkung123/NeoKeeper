@@ -15,10 +15,6 @@ repositories {
         name = "sonatype"
         url = "https://oss.sonatype.org/content/groups/public/"
     }
-    maven{
-        name = 'mmoitems'
-        url = 'https://mvn.lumine.io/repository/maven-public/'
-    }
     maven {
         name = 'nbtapi'
         url = 'https://repo.codemc.org/repository/maven-public/'
@@ -26,14 +22,23 @@ repositories {
     maven {
         url 'https://jitpack.io'
     }
+    maven {
+        name = 'phoenix'
+        url = 'https://nexus.phoenixdevt.fr/repository/maven-public/'
+    }
+    maven {
+        name = 'LoneLibs'
+        url = 'https://www.matteodev.it/spigot/public/maven/'
+    }
 }
 
 dependencies {
     compileOnly "io.papermc.paper:paper-api:1.20.4-R0.1-SNAPSHOT"
-    compileOnly 'com.github.LoneDev6:API-ItemsAdder:3.5.0b'
-    compileOnly 'de.tr7zw:item-nbt-api-plugin:2.12.2'
-    compileOnly("net.Indyuce:MMOItems:6.7.3")
-    compileOnly("io.lumine:MythicLib-dist:1.4")
+    compileOnly 'com.github.LoneDev6:api-itemsadder:3.6.1'
+    compileOnly 'dev.lone:LoneLibs:1.0.58'
+    compileOnly 'de.tr7zw:item-nbt-api-plugin:2.14.0'
+    compileOnly 'io.lumine:MythicLib-dist:1.6.2-SNAPSHOT'
+    compileOnly 'net.Indyuce:MMOItems-API:6.9.5-SNAPSHOT'
 }
 
 def targetJavaVersion = 17

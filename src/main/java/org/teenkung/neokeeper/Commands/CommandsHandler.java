@@ -6,10 +6,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-import org.teenkung.neokeeper.Commands.SubCommands.CreateCommand;
-import org.teenkung.neokeeper.Commands.SubCommands.EditCommand;
-import org.teenkung.neokeeper.Commands.SubCommands.OpenCommand;
-import org.teenkung.neokeeper.Commands.SubCommands.RemoveCommand;
+import org.teenkung.neokeeper.Commands.SubCommands.*;
 import org.teenkung.neokeeper.NeoKeeper;
 
 public class CommandsHandler implements CommandExecutor {
@@ -19,12 +16,15 @@ public class CommandsHandler implements CommandExecutor {
     private final EditCommand editCommand;
     private final CreateCommand createCommand;
     private final RemoveCommand removeCommand;
+    private final ReloadCommand reloadCommand;
+
     public CommandsHandler(NeoKeeper plugin) {
         this.plugin = plugin;
         this.openCommand = new OpenCommand();
         this.editCommand = new EditCommand();
         this.createCommand = new CreateCommand();
         this.removeCommand = new RemoveCommand();
+        this.reloadCommand = new ReloadCommand();
     }
 
     @Override
@@ -37,6 +37,7 @@ public class CommandsHandler implements CommandExecutor {
                     case "edit" -> editCommand.execute(plugin, player, args);
                     case "create" -> createCommand.execute(plugin, player, args);
                     case "remove" -> removeCommand.execute(plugin, player, args);
+                    case "reload" -> reloadCommand.execute(plugin, player, args);
                     default -> {
                     }
                 }
