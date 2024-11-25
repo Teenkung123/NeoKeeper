@@ -7,6 +7,7 @@ import java.util.Map;
 
 public class ItemStackSerialization {
 
+    private static YamlConfiguration config = new YamlConfiguration();
     /**
      * Serializes an ItemStack to a String.
      *
@@ -14,7 +15,6 @@ public class ItemStackSerialization {
      * @return the serialized ItemStack as a String
      */
     public static String serialize(ItemStack item) {
-        YamlConfiguration config = new YamlConfiguration();
         config.set("item", item);
         return config.saveToString();
     }
@@ -26,12 +26,11 @@ public class ItemStackSerialization {
      * @return the deserialized ItemStack
      */
     public static ItemStack deserialize(String itemString) {
-        YamlConfiguration config = new YamlConfiguration();
         try {
             config.loadFromString(itemString);
             return config.getItemStack("item");
         } catch (Exception e) {
-            return new ItemStack(Material.AIR); // Return an empty item stack in case of error
+            return new ItemStack(Material.AIR);
         }
     }
 

@@ -12,8 +12,8 @@ public class TradeManager {
 
     public TradeManager(ConfigurationSection section) {
         reward = new ItemManager(section.getString("Reward.Type"), section.getString("Reward.Item"), section.getInt("Reward.Amount", 1));
-        quest1 = new ItemManager(section.getString("Quests.1.Type", "NONE"), section.getString("Quests.1.Item", "NONE"), section.getInt("Quests.1.Amount", 1));
-        quest2 = new ItemManager(section.getString("Quests.2.Type", "NONE"), section.getString("Quests.2.Item", "NONE"), section.getInt("Quests.2.Amount", 1));
+        quest1 = new ItemManager(section.getString("Quests.1.Type", "NONE"), section.getString("Quests.1.Item", "NONE"), section.getInt("Quests.1.Amount", 0));
+        quest2 = new ItemManager(section.getString("Quests.2.Type", "NONE"), section.getString("Quests.2.Item", "NONE"), section.getInt("Quests.2.Amount", 0));
 
     }
 
