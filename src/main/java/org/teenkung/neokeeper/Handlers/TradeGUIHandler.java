@@ -37,7 +37,6 @@ public class TradeGUIHandler implements Listener {
         if (TradeInventoryManager.isPluginInventory(event.getInventory())) {
             ItemStack q1 = event.getInventory().getItem(plugin.getConfigLoader().getQuest1Slot());
             ItemStack q2 = event.getInventory().getItem(plugin.getConfigLoader().getQuest2Slot());
-            ItemStack r = event.getInventory().getItem(plugin.getConfigLoader().getRewardSlot());
 
             if (q1 != null) {
                 event.getPlayer().getInventory().addItem(q1);
@@ -88,27 +87,19 @@ public class TradeGUIHandler implements Listener {
             return;
         }
         if (handleSelectorEvent(event, storage, player, inventoryManager)) {
-            Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                showReward(inventory, storage, inventoryManager);
-            }, 1);
+            Bukkit.getScheduler().runTaskLater(plugin, () -> showReward(inventory, storage, inventoryManager), 1);
             return;
         }
         if (handleQuestEvent(event, storage, inventoryManager)) {
-            Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                showReward(inventory, storage, inventoryManager);
-            }, 1);
+            Bukkit.getScheduler().runTaskLater(plugin, () -> showReward(inventory, storage, inventoryManager), 1);
             return;
         }
         if (handleTradeEvent(event, storage, inventoryManager)) {
             deductItem(event, inventoryManager.getTradeManagers().get(storage.selecting()));
-            Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                showReward(inventory, storage, inventoryManager);
-            }, 1);
+            Bukkit.getScheduler().runTaskLater(plugin, () -> showReward(inventory, storage, inventoryManager), 1);
             return;
         }
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            showReward(inventory, storage, inventoryManager);
-        }, 1);
+        Bukkit.getScheduler().runTaskLater(plugin, () -> showReward(inventory, storage, inventoryManager), 1);
     }
 
     private boolean handleNextPageEvent(InventoryClickEvent event, TradeInventoryStorage storage, InventoryManager inventoryManager) {
@@ -162,6 +153,23 @@ public class TradeGUIHandler implements Listener {
         if (event.getSlot() != configLoader.getRewardSlot()) {
             return false;
         }
+
+        if (event.getAction() != InventoryAction.PICKUP_ALL && event.getAction() != InventoryAction.MOVE_TO_OTHER_INVENTORY) {
+            event.setCancelled(true);
+            return false;
+        }
+
+        if (event.getCurrentItem() == null) {
+            event.setCancelled(true);
+            return false;
+        }
+
+        if (NBT.get(event.getCurrentItem(), nbt -> { return nbt.hasTag("NeoShopID"); })) {
+            event.setCancelled(true);
+            return false;
+        }
+
+        // prevent player putting item back to reward slot
         if (!event.getCursor().getType().isAir()) {
             event.setCancelled(true);
             if (compare (new ItemManager(event.getCursor()), inventoryManager.getTradeManagers().get(storage.selecting()).getRewardManager())) {
@@ -173,23 +181,41 @@ public class TradeGUIHandler implements Listener {
             }
             return false;
         }
-        if (event.getCurrentItem() == null) {
+
+        // shift click functionality
+        if (event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
             event.setCancelled(true);
+            while (checkItems(event.getClickedInventory().getItem(configLoader.getQuest1Slot()), event.getClickedInventory().getItem(configLoader.getQuest2Slot()), inventoryManager.getTradeManagers().get(storage.selecting()))) {
+                if (event.getWhoClicked().getInventory().firstEmpty() == -1) break;
+                event.getWhoClicked().getInventory().addItem(event.getClickedInventory().getItem(configLoader.getRewardSlot()));
+                deductItem(event, inventoryManager.getTradeManagers().get(storage.selecting()));
+            }
+            event.getClickedInventory().setItem(configLoader.getRewardSlot(), plugin.getNoItemItem());
+            Bukkit.getScheduler().runTaskLater(plugin, () -> showReward(event.getClickedInventory(), storage, inventoryManager), 1);
             return false;
         }
-        if (event.getAction() != InventoryAction.PICKUP_ALL && event.getAction() != InventoryAction.MOVE_TO_OTHER_INVENTORY) {
-            event.setCancelled(true);
-            return false;
-        }
+
         return true;
     }
 
     private void showReward(Inventory inventory, TradeInventoryStorage storage, InventoryManager inventoryManager) {
-
         TradeManager tradeManager = inventoryManager.getTradeManagers().get(storage.selecting());
         ItemStack reward = plugin.getNoItemItem();
         ItemStack q1item = inventory.getItem(configLoader.getQuest1Slot());
         ItemStack q2item = inventory.getItem(configLoader.getQuest2Slot());
+
+        boolean itemsValid = checkItems(q1item, q2item, tradeManager);
+
+        if (itemsValid) {
+            if (inventory.getItem(configLoader.getRewardSlot()) != null && !NBT.get(inventory.getItem(configLoader.getRewardSlot()), nbt -> { return nbt.hasTag("NeoShopID"); })) {
+                return;
+            }
+            reward = tradeManager.getRewardItem();
+        }
+        inventory.setItem(configLoader.getRewardSlot(), reward);
+    }
+
+    private boolean checkItems(ItemStack q1item, ItemStack q2item, TradeManager tradeManager) {
         int q1amt = q1item == null ? 0 : q1item.getAmount();
         int q2amt = q2item == null ? 0 : q2item.getAmount();
         ItemManager q1Manager = tradeManager.getQuest1Manager();
@@ -204,18 +230,9 @@ public class TradeGUIHandler implements Listener {
             q2 = true;
         }
 
-        if (q1 && q2) {
-            if (inventory.getItem(configLoader.getRewardSlot()) != null && !NBT.get(inventory.getItem(configLoader.getRewardSlot()), nbt -> { return nbt.hasTag("NeoShopID"); })) {
-                return;
-            }
-            reward = tradeManager.getRewardItem();
-            inventory.setItem(configLoader.getRewardSlot(), reward);
-            return;
-        }
-        inventory.setItem(configLoader.getRewardSlot(), reward);
+        return q1 && q2;
     }
 
-    @SuppressWarnings("DataFlowIssue")
     private void prepareItem(InventoryClickEvent event, InventoryManager inventoryManager, TradeInventoryStorage storage) {
         if (event.getClickedInventory().getItem(configLoader.getQuest1Slot()) != null) {
             event.getWhoClicked().getInventory().addItem(event.getClickedInventory().getItem(configLoader.getQuest1Slot()));
