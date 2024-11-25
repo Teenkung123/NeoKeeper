@@ -1,15 +1,20 @@
 package org.teenkung.neokeeper.Commands.SubCommands;
 
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.teenkung.neokeeper.NeoKeeper;
 
 public class EditCommand {
 
-    public void execute(NeoKeeper plugin, Player player, String[] args) {
+    public void execute(NeoKeeper plugin, CommandSender player, String[] args) {
+        if (!(player instanceof Player)) {
+            player.sendMessage(plugin.colorize("<red>Only players can use this command!"));
+            return;
+        }
         if (args.length == 2) {
             String id = args[1];
             if (plugin.getShopLoader().getAllTradeManagers().containsKey(id)) {
-                plugin.getShopLoader().getTradeManager(id).buildEditGUI(player);
+                plugin.getShopLoader().getTradeManager(id).buildEditGUI((Player) player);
             } else {
                 player.sendMessage(plugin.colorize("<red>Could not find shop with id: " + id));
             }

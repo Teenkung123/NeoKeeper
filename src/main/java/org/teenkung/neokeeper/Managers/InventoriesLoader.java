@@ -49,9 +49,31 @@ public class InventoriesLoader {
 
     public Map<String, InventoryManager> getAllTradeManagers() { return tradeUtils; }
     public InventoryManager getTradeManager(String id) { return tradeUtils.getOrDefault(id, null); }
+    public boolean deleteShop(String id, Boolean removeFiles) {
+        if (tradeUtils.containsKey(id)) {
+            tradeUtils.remove(id);
+            if (removeFiles) {
+                File shopFile = new File(shopsFolder, id + ".yml");
+                if (shopFile.exists()) {
+                    if (shopFile.delete()) {
+                        plugin.getLogger().info("Shop removed with ID: " + id);
+                        return true;
+                    } else {
+                        plugin.getLogger().severe("Could not delete the shop file for ID: " + id);
+                    }
+                } else {
+                    plugin.getLogger().warning("Shop with ID: " + id + " does not exist.");
+                }
+                return false;
+            }
+            return true;
+        } else {
+            plugin.getLogger().warning("Shop with ID: " + id + " does not exist.");
+        }
+        return false;
+    }
 
-
-    public void addShop(String id, String name) {
+    public void addShop(String id, String title) {
         if (!shopsFolder.exists()) {
             plugin.getLogger().info("Shops folder does not exist. Creating new one...");
             if (!shopsFolder.mkdirs()) {
@@ -69,7 +91,7 @@ public class InventoriesLoader {
                 }
                 YamlConfiguration config = YamlConfiguration.loadConfiguration(newShopFile);
                 config.createSection("Option");
-                config.set("Option.Title", name);
+                config.set("Option.Title", title);
                 config.createSection("Items");
                 config.save(newShopFile);
                 InventoryManager newShop = new InventoryManager(plugin, config, id);
@@ -80,20 +102,6 @@ public class InventoriesLoader {
             }
         } else {
             plugin.getLogger().warning("Shop with ID: " + id + " already exists.");
-        }
-    }
-
-    public void removeShop(String id) {
-        File shopFile = new File(shopsFolder, id + ".yml");
-        if (shopFile.exists()) {
-            if (shopFile.delete()) {
-                tradeUtils.remove(id);
-                plugin.getLogger().info("Shop removed with ID: " + id);
-            } else {
-                plugin.getLogger().severe("Could not delete the shop file for ID: " + id);
-            }
-        } else {
-            plugin.getLogger().warning("Shop with ID: " + id + " does not exist.");
         }
     }
 }

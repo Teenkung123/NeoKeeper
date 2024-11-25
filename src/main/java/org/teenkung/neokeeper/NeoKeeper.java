@@ -26,6 +26,7 @@ public final class NeoKeeper extends JavaPlugin {
     private InventoriesLoader shopLoader;
     private ConfigLoader configLoader;
     private CitizensUtils citizensUtils;
+    private String prefix = "<gray>[<gold>NeoKeeper<gray>] ";
 
     @Override
     public void onEnable() {
@@ -117,5 +118,9 @@ public final class NeoKeeper extends JavaPlugin {
             item.setBoolean("NeoShopID", true);
         });
         return filItem;
+    }
+
+    public String getPrefix() {
+        return prefix;
     }
 }

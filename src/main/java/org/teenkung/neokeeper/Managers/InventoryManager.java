@@ -4,6 +4,7 @@ import de.tr7zw.nbtapi.NBT;
 import dev.lone.itemsadder.api.CustomStack;
 import net.Indyuce.mmoitems.MMOItems;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -32,6 +33,8 @@ public class InventoryManager {
     private final ArrayList<TradeManager> tradeManagers;
     private final List<String> listPerPage;
     private final List<Integer> bindNPCs = new ArrayList<>();
+    private Component title;
+
     public InventoryManager(NeoKeeper plugin, YamlConfiguration config, String id) {
         this.config = config;
         this.plugin = plugin;
@@ -46,6 +49,16 @@ public class InventoryManager {
                 tradeManagers.add(new TradeManager(Objects.requireNonNull(section.getConfigurationSection(key))));
             }
         }
+
+        this.title = plugin.colorize(config.getString("Option.Title", "Default Shop"));
+    }
+
+    public void title(Component title) {
+        this.title = title;
+    }
+
+    public Component title() {
+        return title;
     }
 
     public void buildTradeGUI(Player player) {
@@ -109,7 +122,8 @@ public class InventoryManager {
     private Inventory createGUI() {
         List<String> layout = plugin.getConfigLoader().getGUILayout();
         int rows = layout.size();
-        Inventory gui = TradeInventoryManager.createPluginInventory(rows * 9, plugin.colorize(config.getString("Option.Title", "Default Shop")), id);
+        Inventory gui = TradeInventoryManager.createPluginInventory(rows * 9, title, id);
+
         ConfigurationSection section = plugin.getConfigLoader().getGUIItemsSection();
         section.getKeys(false).forEach(key -> {
             String type = section.getString(key + ".Type", "VANILLA").toUpperCase();
@@ -199,6 +213,11 @@ public class InventoryManager {
         return tradeManagers;
     }
 
+    /*
+    Separator between Trade GUI and Edit GUI
+    //TODO: Reworked this class to separate Trade GUI and Edit GUI
+     */
+
     public void buildEditGUI(Player player) {
         Inventory inv = createEditGUI();
         player.openInventory(inv);
@@ -206,9 +225,39 @@ public class InventoryManager {
 
     public Inventory createEditGUI() {
         Inventory inv = EditInventoryManager.createInventory(54, Component.text("Editing: " + id), id);
-        inv.setItem(53, new ItemStack(Material.YELLOW_WOOL));
-        inv.setItem(44, new ItemStack(Material.LIME_WOOL));
-        inv.setItem(35, new ItemStack(Material.RED_WOOL));
+        ItemManager save = new ItemManager(new ItemStack(Material.LIME_CONCRETE));
+        ItemManager edit = new ItemManager(new ItemStack(Material.YELLOW_CONCRETE));
+        ItemManager delete = new ItemManager(new ItemStack(Material.RED_CONCRETE));
+        
+        save.setDisplayName(plugin.colorize("<green>Save Change"));
+        edit.setDisplayName(plugin.colorize("<yellow>Change GUI Title"));
+        delete.setDisplayName(plugin.colorize("<red>Delete"));
+        
+        save.setLore(new ArrayList<>(List.of(
+                plugin.colorize("<white>Save the changes you made"),
+                plugin.colorize("<white>to the shop."),
+                plugin.colorize(""),
+                plugin.colorize("<yellow>Please make sure that the reward items is on the top of each column."),
+                plugin.colorize("<green>Click to save.")
+        )));
+        
+        edit.setLore(new ArrayList<>(List.of(
+                plugin.colorize("<white>Change the GUI title."),
+                plugin.colorize("<white>Current Title: <reset>" + config.getString("Option.Title", "Default Shop")),
+                plugin.colorize(""),
+                plugin.colorize("<green>Click to change.")
+        )));
+
+        delete.setLore(new ArrayList<>(List.of(
+                plugin.colorize("<white>Delete this shop."),
+                plugin.colorize("<red>Warning: This action is irreversible."),
+                plugin.colorize("<white>"),
+                plugin.colorize("<red>Click to delete.")
+        )));
+        
+        inv.setItem(35, save.getItem());
+        inv.setItem(44, edit.getItem());
+        inv.setItem(53, delete.getItem());
 
         int i = 0;
         int rewardIndex = 0;

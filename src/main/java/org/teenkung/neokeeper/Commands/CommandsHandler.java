@@ -17,6 +17,7 @@ public class CommandsHandler implements CommandExecutor {
     private final CreateCommand createCommand;
     private final RemoveCommand removeCommand;
     private final ReloadCommand reloadCommand;
+    private final HelpCommand helpCommand;
 
     public CommandsHandler(NeoKeeper plugin) {
         this.plugin = plugin;
@@ -25,25 +26,25 @@ public class CommandsHandler implements CommandExecutor {
         this.createCommand = new CreateCommand();
         this.removeCommand = new RemoveCommand();
         this.reloadCommand = new ReloadCommand();
+        this.helpCommand = new HelpCommand();
     }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        if (sender instanceof Player player) {
+        if (sender.hasPermission("neokeeper.admin")) {
             if (args.length > 0) {
                 String main = args[0].toLowerCase();
                 switch (main) {
-                    case "open" -> openCommand.execute(plugin, player, args);
-                    case "edit" -> editCommand.execute(plugin, player, args);
-                    case "create" -> createCommand.execute(plugin, player, args);
-                    case "remove" -> removeCommand.execute(plugin, player, args);
-                    case "reload" -> reloadCommand.execute(plugin, player, args);
+                    case "open" -> openCommand.execute(plugin, sender, args);
+                    case "edit" -> editCommand.execute(plugin, sender, args);
+                    case "create" -> createCommand.execute(plugin, sender, args);
+                    case "remove" -> removeCommand.execute(plugin, sender, args);
+                    case "reload" -> reloadCommand.execute(plugin, sender, args);
                     default -> {
+                        helpCommand.execute(plugin, sender, args);
                     }
                 }
             }
-        } else {
-            sender.sendMessage(plugin.colorize("<red>This command can only executed by a player!"));
         }
         return false;
     }

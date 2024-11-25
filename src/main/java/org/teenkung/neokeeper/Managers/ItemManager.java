@@ -3,10 +3,14 @@ package org.teenkung.neokeeper.Managers;
 import dev.lone.itemsadder.api.CustomStack;
 import io.lumine.mythic.lib.api.item.NBTItem;
 import net.Indyuce.mmoitems.MMOItems;
+import net.kyori.adventure.text.Component;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.teenkung.neokeeper.Utils.ItemStackSerialization;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The {@code ItemManager} class is responsible for managing and manipulating {@link ItemStack} objects
@@ -38,6 +42,16 @@ public class ItemManager {
     private Integer amount = 0;
 
     /**
+     * The custom display name to be applied to the item.
+     */
+    private Component customDisplayName;
+
+    /**
+     * The custom lore to be applied to the item.
+     */
+    private List<Component> customLore;
+
+    /**
      * Constructs a new {@code ItemManager} with the specified type, item identifier, and amount.
      *
      * @param type   the type of the item (e.g., "IA", "MI", "VANILLA")
@@ -47,11 +61,17 @@ public class ItemManager {
     public ItemManager(String type, String item, Integer amount) {
         this.type = type;
         this.item = item;
-        this.amount = amount;
+        this.amount = amount != null ? amount : 0;
 
-        if (this.type == null) { this.type = "NONE"; }
-        if (this.item == null) { this.item = "NONE"; }
-        if (this.type.equalsIgnoreCase("NONE") || this.item.equalsIgnoreCase("NONE")) { amount = 0; };
+        if (this.type == null) {
+            this.type = "NONE";
+        }
+        if (this.item == null) {
+            this.item = "NONE";
+        }
+        if (this.type.equalsIgnoreCase("NONE") || this.item.equalsIgnoreCase("NONE")) {
+            this.amount = 0;
+        }
 
         this.itemDisplay = item;
     }
@@ -90,29 +110,103 @@ public class ItemManager {
     }
 
     /**
-     * Retrieves the {@link ItemStack} represented by this {@code ItemManager}.
-     * The returned {@code ItemStack} is constructed based on the item type and identifier.
+     * Generates and retrieves the {@link ItemStack} represented by this {@code ItemManager}.
+     * The returned {@code ItemStack} is constructed based on the item type and identifier,
+     * with any custom display name or lore applied.
      *
      * @return the corresponding {@code ItemStack}, or {@code null} if the type is "NONE"
      */
     public ItemStack getItem() {
-        ItemStack returnStack;
+        ItemStack returnStack = null;
         if (this.type.equalsIgnoreCase("IA")) {
-            returnStack = CustomStack.getInstance(item).getItemStack();
+            CustomStack customStack = CustomStack.getInstance(item);
+            if (customStack != null) {
+                returnStack = customStack.getItemStack();
+            }
         } else if (this.type.equalsIgnoreCase("MI")) {
             String[] args = item.split(":");
-            String type = args[0];
-            String id = args[1];
-            returnStack = MMOItems.plugin.getItem(type, id);
-        } else if (this.type.equalsIgnoreCase("NONE")) {
-            returnStack = null;
-        } else {
+            if (args.length >= 2) {
+                String type = args[0];
+                String id = args[1];
+                returnStack = MMOItems.plugin.getItem(type, id);
+            }
+        } else if (this.type.equalsIgnoreCase("VANILLA")) {
             returnStack = ItemStackSerialization.deserialize(item);
         }
+
         if (returnStack != null) {
             returnStack.setAmount(amount);
+            ItemMeta meta = returnStack.getItemMeta();
+            if (meta != null) {
+                if (customDisplayName != null) {
+                    meta.displayName(customDisplayName);
+                }
+                if (customLore != null) {
+                    meta.lore(customLore);
+                }
+                returnStack.setItemMeta(meta);
+            }
         }
         return returnStack;
+    }
+
+    /**
+     * Sets the display name of the item using the Adventure Component API.
+     *
+     * @param displayName the display name to set as a {@link Component}
+     */
+    public void setDisplayName(Component displayName) {
+        this.customDisplayName = displayName;
+    }
+
+    /**
+     * Gets the custom display name set for the item as a {@link Component}.
+     *
+     * @return the custom display name of the item, or {@code null} if not set
+     */
+    @Nullable
+    public Component getDisplayName() {
+        return customDisplayName;
+    }
+
+    /**
+     * Sets the lore of the item using the Adventure Component API.
+     *
+     * @param lore a list of {@link Component} representing the lore lines
+     */
+    public void setLore(List<Component> lore) {
+        this.customLore = lore;
+    }
+
+    /**
+     * Gets the custom lore set for the item as a list of {@link Component}.
+     *
+     * @return the custom lore of the item, or {@code null} if not set
+     */
+    @Nullable
+    public List<Component> getLore() {
+        return customLore;
+    }
+
+    /**
+     * Adds a line to the item's lore.
+     *
+     * @param line the {@link Component} line to add
+     */
+    public void addLoreLine(Component line) {
+        if (this.customLore == null) {
+            this.customLore = new ArrayList<>();
+        }
+        this.customLore.add(line);
+    }
+
+    /**
+     * Clears the lore of the item.
+     */
+    public void clearLore() {
+        if (this.customLore != null) {
+            this.customLore.clear();
+        }
     }
 
     /**
@@ -120,20 +214,52 @@ public class ItemManager {
      *
      * @return the display string of the item
      */
-    public String getStringItem() { return itemDisplay; }
+    public String getStringItem() {
+        return itemDisplay;
+    }
 
     /**
      * Retrieves the type of the item.
      *
      * @return the type of the item (e.g., "IA", "MI", "VANILLA", "NONE")
      */
-    public String getType() { return type; }
+    public String getType() {
+        return type;
+    }
 
     /**
      * Retrieves the quantity of the item stack.
      *
      * @return the amount of the item
      */
-    public Integer getAmount() { return amount; }
+    public Integer getAmount() {
+        return amount;
+    }
 
+    /**
+     * Sets the quantity of the item stack.
+     *
+     * @param amount the new amount to set
+     */
+    public void setAmount(int amount) {
+        this.amount = amount;
+    }
+
+    /**
+     * Checks if the item has a custom display name.
+     *
+     * @return {@code true} if the item has a custom display name, {@code false} otherwise
+     */
+    public boolean hasDisplayName() {
+        return customDisplayName != null;
+    }
+
+    /**
+     * Checks if the item has custom lore.
+     *
+     * @return {@code true} if the item has custom lore, {@code false} otherwise
+     */
+    public boolean hasLore() {
+        return customLore != null && !customLore.isEmpty();
+    }
 }
