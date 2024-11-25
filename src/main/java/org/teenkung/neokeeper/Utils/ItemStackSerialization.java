@@ -1,9 +1,8 @@
-package org.teenkung.neokeeper;
+package org.teenkung.neokeeper.Utils;
 
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.Material;
-import java.util.Map;
 
 public class ItemStackSerialization {
 

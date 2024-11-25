@@ -31,12 +31,14 @@ public class InventoryManager {
     private final String id;
     private final ArrayList<TradeManager> tradeManagers;
     private final List<String> listPerPage;
+    private final List<Integer> bindNPCs = new ArrayList<>();
     public InventoryManager(NeoKeeper plugin, YamlConfiguration config, String id) {
         this.config = config;
         this.plugin = plugin;
         this.tradeManagers = new ArrayList<>();
         this.id = id;
         this.listPerPage = plugin.getConfigLoader().getSelectorSlots();
+        this.bindNPCs.addAll(config.getIntegerList("BindNPCs"));
 
         ConfigurationSection section = config.getConfigurationSection("Items");
         if (section != null) {

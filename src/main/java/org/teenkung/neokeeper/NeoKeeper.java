@@ -1,6 +1,7 @@
 package org.teenkung.neokeeper;
 
 import de.tr7zw.nbtapi.NBT;
+import net.citizensnpcs.api.CitizensAPI;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
@@ -18,15 +19,19 @@ import org.teenkung.neokeeper.Handlers.TradeGUIHandler;
 import org.teenkung.neokeeper.Managers.Edit.EditInventoryManager;
 import org.teenkung.neokeeper.Managers.InventoriesLoader;
 import org.teenkung.neokeeper.Managers.Trades.TradeInventoryManager;
+import org.teenkung.neokeeper.Utils.CitizensUtils;
 
 public final class NeoKeeper extends JavaPlugin {
 
     private InventoriesLoader shopLoader;
     private ConfigLoader configLoader;
+    private CitizensUtils citizensUtils;
+
     @Override
     public void onEnable() {
         this.configLoader = new ConfigLoader(this);
         this.shopLoader = new InventoriesLoader(this);
+        this.citizensUtils = new CitizensUtils(this);
         shopLoader.loadAllShop();
 
         Bukkit.getPluginManager().registerEvents(new TradeGUIHandler(this), this);
@@ -60,11 +65,13 @@ public final class NeoKeeper extends JavaPlugin {
     public void reload() {
         this.configLoader = new ConfigLoader(this);
         this.shopLoader = new InventoriesLoader(this);
+        this.citizensUtils = new CitizensUtils(this);
         shopLoader.loadAllShop();
     }
 
     public InventoriesLoader getShopLoader() { return shopLoader; }
     public ConfigLoader getConfigLoader() { return configLoader; }
+    public CitizensUtils getCitizensUtils() { return citizensUtils; }
 
     /**
      * Transforms Minecraft color codes in a string to mini messages color format.

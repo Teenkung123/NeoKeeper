@@ -30,6 +30,10 @@ repositories {
         name = 'LoneLibs'
         url = 'https://www.matteodev.it/spigot/public/maven/'
     }
+    maven {
+        name = 'citizens'
+        url = 'https://maven.citizensnpcs.co/repo'
+    }
 }
 
 dependencies {
@@ -39,6 +43,7 @@ dependencies {
     compileOnly 'de.tr7zw:item-nbt-api-plugin:2.14.0'
     compileOnly 'io.lumine:MythicLib-dist:1.6.2-SNAPSHOT'
     compileOnly 'net.Indyuce:MMOItems-API:6.9.5-SNAPSHOT'
+    compileOnly 'net.citizensnpcs:citizensapi:2.0.35-SNAPSHOT'
 }
 
 def targetJavaVersion = 17

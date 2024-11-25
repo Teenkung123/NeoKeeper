@@ -4,7 +4,7 @@ import dev.lone.itemsadder.api.CustomStack;
 import io.lumine.mythic.lib.api.item.NBTItem;
 import net.Indyuce.mmoitems.MMOItems;
 import org.bukkit.inventory.ItemStack;
-import org.teenkung.neokeeper.ItemStackSerialization;
+import org.teenkung.neokeeper.Utils.ItemStackSerialization;
 
 import javax.annotation.Nullable;
 
