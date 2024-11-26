@@ -3,6 +3,7 @@ package org.teenkung.neokeeper.Handlers;
 import de.tr7zw.nbtapi.NBT;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -19,6 +20,8 @@ import org.teenkung.neokeeper.Managers.Trades.TradeInventoryStorage;
 import org.teenkung.neokeeper.Managers.Trades.TradeManager;
 import org.teenkung.neokeeper.NeoKeeper;
 
+import java.util.HashMap;
+
 import static java.lang.Math.max;
 
 @SuppressWarnings({"DuplicatedCode", "DataFlowIssue"})
@@ -26,6 +29,7 @@ public class TradeGUIHandler implements Listener {
 
     private final NeoKeeper plugin;
     private final ConfigLoader configLoader;
+    private final HashMap<Player, Long> lastTrade = new HashMap<>();
 
     public TradeGUIHandler(NeoKeeper plugin) {
         this.plugin = plugin;
@@ -84,18 +88,20 @@ public class TradeGUIHandler implements Listener {
         }
 
         if (handleNextPageEvent(event, storage, inventoryManager)) {
+            player.playSound(player.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_HIT, 1, 1);
             return;
         }
-        if (handleSelectorEvent(event, storage, player, inventoryManager)) {
+        else if (handleSelectorEvent(event, storage, inventoryManager)) {
             Bukkit.getScheduler().runTaskLater(plugin, () -> showReward(inventory, storage, inventoryManager), 1);
             return;
         }
-        if (handleQuestEvent(event, storage, inventoryManager)) {
+        else if (handleQuestEvent(event, storage, inventoryManager)) {
             Bukkit.getScheduler().runTaskLater(plugin, () -> showReward(inventory, storage, inventoryManager), 1);
             return;
         }
-        if (handleTradeEvent(event, storage, inventoryManager)) {
+        else if (handleTradeEvent(event, storage, inventoryManager)) {
             deductItem(event, inventoryManager.getTradeManagers().get(storage.selecting()));
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 0.25F, 2);
             Bukkit.getScheduler().runTaskLater(plugin, () -> showReward(inventory, storage, inventoryManager), 1);
             return;
         }
@@ -118,7 +124,7 @@ public class TradeGUIHandler implements Listener {
         }
         return false;
     }
-    private boolean handleSelectorEvent(InventoryClickEvent event, TradeInventoryStorage storage, Player player, InventoryManager inventoryManager) {
+    private boolean handleSelectorEvent(InventoryClickEvent event, TradeInventoryStorage storage, InventoryManager inventoryManager) {
         if (event.getCurrentItem() == null) {
             return false;
         }
@@ -128,10 +134,10 @@ public class TradeGUIHandler implements Listener {
         if (!NBT.get(event.getCurrentItem(), nbt -> { return nbt.hasTag("NeoIndex"); })) {
             return false;
         }
-        player.playSound(player.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 1, 1);
+
         Integer index = NBT.get(event.getCurrentItem(), nbt -> { return nbt.getInteger("NeoIndex"); });
         storage.selecting(index);
-        prepareItem(event, inventoryManager, storage);
+        prepareItem(event, inventoryManager, storage, true);
         return true;
     }
     private boolean handleQuestEvent(InventoryClickEvent event, TradeInventoryStorage storage, InventoryManager inventoryManager) {
@@ -154,7 +160,7 @@ public class TradeGUIHandler implements Listener {
             return false;
         }
 
-        if (event.getAction() != InventoryAction.PICKUP_ALL && event.getAction() != InventoryAction.MOVE_TO_OTHER_INVENTORY) {
+        if (event.getAction() != InventoryAction.PICKUP_ALL && event.getAction() != InventoryAction.MOVE_TO_OTHER_INVENTORY && event.getAction() != InventoryAction.PLACE_ONE && event.getAction() != InventoryAction.PLACE_ALL) {
             event.setCancelled(true);
             return false;
         }
@@ -169,11 +175,18 @@ public class TradeGUIHandler implements Listener {
             return false;
         }
 
+        Player player = (Player) event.getWhoClicked();
+        if (lastTrade.containsKey(player) && System.currentTimeMillis() - lastTrade.get(player) < 60) {
+            player.sendMessage(plugin.colorize("<red>Please wait before trading again!"));
+            event.setCancelled(true);
+            return false;
+        }
+
         // prevent player putting item back to reward slot
-        if (!event.getCursor().getType().isAir()) {
+        if (event.getAction() == InventoryAction.PLACE_ONE || event.getAction() == InventoryAction.PLACE_ALL) {
             event.setCancelled(true);
             if (compare (new ItemManager(event.getCursor()), inventoryManager.getTradeManagers().get(storage.selecting()).getRewardManager())) {
-                if (event.getCursor().getMaxStackSize() > event.getCursor().getAmount() + 1) {
+                if (event.getCursor().getMaxStackSize() >= event.getCursor().getAmount() + 1) {
                     event.getCursor().setAmount(event.getCursor().getAmount() + 1);
                     return true;
                 }
@@ -233,7 +246,7 @@ public class TradeGUIHandler implements Listener {
         return q1 && q2;
     }
 
-    private void prepareItem(InventoryClickEvent event, InventoryManager inventoryManager, TradeInventoryStorage storage) {
+    private void prepareItem(InventoryClickEvent event, InventoryManager inventoryManager, TradeInventoryStorage storage, @SuppressWarnings("SameParameterValue") boolean playSound) {
         if (event.getClickedInventory().getItem(configLoader.getQuest1Slot()) != null) {
             event.getWhoClicked().getInventory().addItem(event.getClickedInventory().getItem(configLoader.getQuest1Slot()));
         }
@@ -246,6 +259,7 @@ public class TradeGUIHandler implements Listener {
         TradeManager tradeManager = inventoryManager.getTradeManagers().get(storage.selecting());
         boolean completed_1 = false;
         boolean completed_2 = false;
+        Player player = (Player) event.getWhoClicked();
         for (int i = 0 ; i < event.getWhoClicked().getInventory().getSize() ; i++) {
             ItemStack item = event.getWhoClicked().getInventory().getItem(i);
             if (item == null) continue;
@@ -261,8 +275,19 @@ public class TradeGUIHandler implements Listener {
                 completed_2 = true;
             }
             if (completed_1 && completed_2) {
+                if (playSound) {
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.33F, 1);
+                    player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 2);
+                }
                 break;
             }
+        }
+        if (completed_1 && completed_2) {
+            return;
+        }
+        if (playSound) {
+            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.33F, 1);
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 1, 1);
         }
     }
 

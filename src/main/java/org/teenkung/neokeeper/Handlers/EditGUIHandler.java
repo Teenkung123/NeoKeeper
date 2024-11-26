@@ -55,7 +55,7 @@ public class EditGUIHandler implements Listener {
             event.setCancelled(true);
             String id = editing.get(event.getPlayer());
             plugin.getShopManager().getTradeManager(id).setTitle(event.message());
-            event.getPlayer().sendMessage(plugin.colorize("<green>Successfully set the title of the shop id " + id + " to " + event.message() + "!"));
+            event.getPlayer().sendMessage(plugin.colorize("<green>Successfully set the title of the shop id " + id + " to ").append(event.message()));
         }
     }
 
