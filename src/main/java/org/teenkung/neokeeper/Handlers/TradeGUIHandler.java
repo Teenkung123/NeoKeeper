@@ -68,7 +68,7 @@ public class TradeGUIHandler implements Listener {
 
         TradeInventoryStorage storage = TradeInventoryManager.getInventoryStorage(inventory);
         String id = storage.id();
-        InventoryManager inventoryManager = plugin.getShopLoader().getTradeManager(id);
+        InventoryManager inventoryManager = plugin.getShopManager().getTradeManager(id);
 
         if (currentItem != null) {
             if (NBT.get(currentItem, nbt -> { return nbt.hasTag("NeoShopID"); })) {
@@ -107,13 +107,13 @@ public class TradeGUIHandler implements Listener {
         if (configLoader.getNextPageSlots().contains(event.getSlot())) {
             offset = Math.min(inventoryManager.getTradeManagers().size() - 4, offset + configLoader.getSelectorSlots().size());
             storage.offset(offset);
-            inventoryManager.fillSelector((Player) event.getWhoClicked(), offset);
+            inventoryManager.getTradeGUI().fillSelector((Player) event.getWhoClicked(), offset);
             return true;
         }
         if (configLoader.getPreviousPageSlots().contains(event.getSlot())) {
             offset = max(0, offset - configLoader.getSelectorSlots().size());
             storage.offset(offset);
-            inventoryManager.fillSelector((Player) event.getWhoClicked(), offset);
+            inventoryManager.getTradeGUI().fillSelector((Player) event.getWhoClicked(), offset);
             return true;
         }
         return false;

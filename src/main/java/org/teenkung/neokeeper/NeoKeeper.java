@@ -1,7 +1,6 @@
 package org.teenkung.neokeeper;
 
 import de.tr7zw.nbtapi.NBT;
-import net.citizensnpcs.api.CitizensAPI;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
@@ -17,23 +16,23 @@ import org.teenkung.neokeeper.Commands.CommandsHandler;
 import org.teenkung.neokeeper.Handlers.EditGUIHandler;
 import org.teenkung.neokeeper.Handlers.TradeGUIHandler;
 import org.teenkung.neokeeper.Managers.Edit.EditInventoryManager;
-import org.teenkung.neokeeper.Managers.InventoriesLoader;
+import org.teenkung.neokeeper.Managers.ShopManager;
 import org.teenkung.neokeeper.Managers.Trades.TradeInventoryManager;
 import org.teenkung.neokeeper.Utils.CitizensUtils;
 
 public final class NeoKeeper extends JavaPlugin {
 
-    private InventoriesLoader shopLoader;
+    private ShopManager shopManager;
     private ConfigLoader configLoader;
     private CitizensUtils citizensUtils;
-    private String prefix = "<gray>[<gold>NeoKeeper<gray>] ";
+    private final String prefix = "<gray>[<gold>NeoKeeper<gray>] ";
 
     @Override
     public void onEnable() {
         this.configLoader = new ConfigLoader(this);
-        this.shopLoader = new InventoriesLoader(this);
+        this.shopManager = new ShopManager(this);
         this.citizensUtils = new CitizensUtils(this);
-        shopLoader.loadAllShop();
+        shopManager.loadAllShop();
 
         Bukkit.getPluginManager().registerEvents(new TradeGUIHandler(this), this);
         Bukkit.getPluginManager().registerEvents(new EditGUIHandler(this), this);
@@ -65,12 +64,12 @@ public final class NeoKeeper extends JavaPlugin {
 
     public void reload() {
         this.configLoader = new ConfigLoader(this);
-        this.shopLoader = new InventoriesLoader(this);
+        this.shopManager = new ShopManager(this);
         this.citizensUtils = new CitizensUtils(this);
-        shopLoader.loadAllShop();
+        shopManager.loadAllShop();
     }
 
-    public InventoriesLoader getShopLoader() { return shopLoader; }
+    public ShopManager getShopManager() { return shopManager; }
     public ConfigLoader getConfigLoader() { return configLoader; }
     public CitizensUtils getCitizensUtils() { return citizensUtils; }
 

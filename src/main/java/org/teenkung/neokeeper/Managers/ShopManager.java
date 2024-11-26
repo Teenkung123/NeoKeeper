@@ -9,13 +9,13 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class InventoriesLoader {
+public class ShopManager {
 
     private final NeoKeeper plugin;
     private final File shopsFolder;
     private Map<String, InventoryManager> tradeUtils;
 
-    public InventoriesLoader(NeoKeeper plugin) {
+    public ShopManager(NeoKeeper plugin) {
 
         this.plugin = plugin;
         this.shopsFolder = new File(plugin.getDataFolder(), "Shops");
@@ -49,29 +49,6 @@ public class InventoriesLoader {
 
     public Map<String, InventoryManager> getAllTradeManagers() { return tradeUtils; }
     public InventoryManager getTradeManager(String id) { return tradeUtils.getOrDefault(id, null); }
-    public boolean deleteShop(String id, Boolean removeFiles) {
-        if (tradeUtils.containsKey(id)) {
-            tradeUtils.remove(id);
-            if (removeFiles) {
-                File shopFile = new File(shopsFolder, id + ".yml");
-                if (shopFile.exists()) {
-                    if (shopFile.delete()) {
-                        plugin.getLogger().info("Shop removed with ID: " + id);
-                        return true;
-                    } else {
-                        plugin.getLogger().severe("Could not delete the shop file for ID: " + id);
-                    }
-                } else {
-                    plugin.getLogger().warning("Shop with ID: " + id + " does not exist.");
-                }
-                return false;
-            }
-            return true;
-        } else {
-            plugin.getLogger().warning("Shop with ID: " + id + " does not exist.");
-        }
-        return false;
-    }
 
     public void addShop(String id, String title) {
         if (!shopsFolder.exists()) {
@@ -103,5 +80,28 @@ public class InventoriesLoader {
         } else {
             plugin.getLogger().warning("Shop with ID: " + id + " already exists.");
         }
+    }
+    public boolean deleteShop(String id, Boolean removeFiles) {
+        if (tradeUtils.containsKey(id)) {
+            tradeUtils.remove(id);
+            if (removeFiles) {
+                File shopFile = new File(shopsFolder, id + ".yml");
+                if (shopFile.exists()) {
+                    if (shopFile.delete()) {
+                        plugin.getLogger().info("Shop removed with ID: " + id);
+                        return true;
+                    } else {
+                        plugin.getLogger().severe("Could not delete the shop file for ID: " + id);
+                    }
+                } else {
+                    plugin.getLogger().warning("Shop with ID: " + id + " does not exist.");
+                }
+                return false;
+            }
+            return true;
+        } else {
+            plugin.getLogger().warning("Shop with ID: " + id + " does not exist.");
+        }
+        return false;
     }
 }

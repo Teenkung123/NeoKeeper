@@ -13,8 +13,8 @@ public class EditCommand {
         }
         if (args.length == 2) {
             String id = args[1];
-            if (plugin.getShopLoader().getAllTradeManagers().containsKey(id)) {
-                plugin.getShopLoader().getTradeManager(id).buildEditGUI((Player) player);
+            if (plugin.getShopManager().getAllTradeManagers().containsKey(id)) {
+                plugin.getShopManager().getTradeManager(id).getEditGUI().buildEditGUI((Player) player);
             } else {
                 player.sendMessage(plugin.colorize("<red>Could not find shop with id: " + id));
             }

@@ -30,7 +30,7 @@ public class CommandTabComplete implements TabCompleter {
         } else if (args.length == 2) {
             String arg = args[0].toLowerCase();
             if (arg.equalsIgnoreCase("edit") || arg.equalsIgnoreCase("open")) {
-                result.addAll(plugin.getShopLoader().getAllTradeManagers().keySet());
+                result.addAll(plugin.getShopManager().getAllTradeManagers().keySet());
             }
         }
 

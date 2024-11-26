@@ -13,15 +13,15 @@ public class OpenCommand {
             return;
         }
         String id = args[1];
-        if (plugin.getShopLoader().getAllTradeManagers().containsKey(id)) {
+        if (plugin.getShopManager().getAllTradeManagers().containsKey(id)) {
             if (args.length == 2) {
-                plugin.getShopLoader().getTradeManager(id).buildTradeGUI((Player) player);
+                plugin.getShopManager().getTradeManager(id).getTradeGUI().buildTradeGUI((Player) player);
             } else {
                 Player target = Bukkit.getPlayer(args[2]);
                 if (target == null) {
                     player.sendMessage(plugin.colorize("<red>Could not find online player named: " + args[2]));
                 } else {
-                    plugin.getShopLoader().getTradeManager(id).buildTradeGUI(target);
+                    plugin.getShopManager().getTradeManager(id).getTradeGUI().buildTradeGUI(target);
                 }
             }
         } else {

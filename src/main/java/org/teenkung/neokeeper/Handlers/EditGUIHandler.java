@@ -10,7 +10,6 @@ import org.bukkit.inventory.Inventory;
 import org.teenkung.neokeeper.Managers.Edit.EditInventoryManager;
 import org.teenkung.neokeeper.NeoKeeper;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 
 public class EditGUIHandler implements Listener {
@@ -28,7 +27,7 @@ public class EditGUIHandler implements Listener {
             Inventory inv = event.getClickedInventory();
             String id = EditInventoryManager.getStorage(inv).id();
             if (event.getSlot() == 35 ) {
-                plugin.getShopLoader().getTradeManager(id).saveEdit(inv);
+                plugin.getShopManager().getTradeManager(id).getEditGUI().saveEdit(inv);
                 event.getWhoClicked().closeInventory();
                 event.getWhoClicked().sendMessage(plugin.colorize("<green>Successfully saved the shop id " + id + "!"));
             } else if (event.getSlot() == 44) {
@@ -36,7 +35,7 @@ public class EditGUIHandler implements Listener {
                 event.getWhoClicked().closeInventory();
             } else if (event.getSlot() == 53) {
                 event.getWhoClicked().closeInventory();
-                if (plugin.getShopLoader().deleteShop(id, true)) {
+                if (plugin.getShopManager().deleteShop(id, true)) {
                     event.getWhoClicked().sendMessage(plugin.colorize("<green>Successfully deleted the shop id " + id + "!"));
                 } else {
                     event.getWhoClicked().sendMessage(plugin.colorize("<red>Failed to delete the shop id " + id + "! Check console for more information."));
@@ -55,7 +54,7 @@ public class EditGUIHandler implements Listener {
         if (editing.containsKey(event.getPlayer())) {
             event.setCancelled(true);
             String id = editing.get(event.getPlayer());
-            plugin.getShopLoader().getTradeManager(id).title(event.message());
+            plugin.getShopManager().getTradeManager(id).setTitle(event.message());
             event.getPlayer().sendMessage(plugin.colorize("<green>Successfully set the title of the shop id " + id + " to " + event.message() + "!"));
         }
     }
