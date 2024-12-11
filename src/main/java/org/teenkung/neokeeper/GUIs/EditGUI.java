@@ -109,23 +109,21 @@ public class EditGUI {
         config.set("Items", null);
         int tradeIndex = 0;
 
-        for (int i = 0; i < 54; i++) {
-
+        for (int i = 0; i < 17; i++) {
             int column = i % 9;
-            int rowGroup = i / 27; // 0 or 1
-            int rowOffset = rowGroup * 27;
+            int row = Double.valueOf(Math.floor(i / 9D)).intValue(); // 0 or 1
 
-            int rewardSlot = rowOffset + column;
-            int q1Slot = rowOffset + 9 + column;
-            int q2Slot = rowOffset + 18 + column;
+            int rewardSlot = column + (row*27);
+            int q1Slot = column + 9 + (row*27);
+            int q2Slot = column + 18 + (row*27);
 
             ItemStack rewardItem = inv.getItem(rewardSlot);
+            ItemStack q1Item = inv.getItem(q1Slot);
+            ItemStack q2Item = inv.getItem(q2Slot);
+
             if (rewardItem == null || rewardItem.getType() == Material.AIR) {
                 continue;
             }
-
-            ItemStack q1Item = inv.getItem(q1Slot);
-            ItemStack q2Item = inv.getItem(q2Slot);
 
             ConfigurationSection section = config.createSection("Items." + tradeIndex);
             ItemManager rewardItemManager = new ItemManager(rewardItem);
@@ -138,6 +136,40 @@ public class EditGUI {
 
             tradeIndex++;
         }
+
+//        for (int i = 0; i < 54; i++) {
+//
+//            int column = i % 9;
+//            int rowGroup = Double.valueOf(Math.floor(i / 27D)).intValue(); // 0 or 1
+//            int rowOffset = rowGroup * 27;
+//
+//            if (column == 8 && rowGroup == 1) {
+//                continue;
+//            }
+//
+//            int rewardSlot = rowOffset + column;
+//            int q1Slot = rowOffset + 9 + column;
+//            int q2Slot = rowOffset + 18 + column;
+//
+//            ItemStack rewardItem = inv.getItem(rewardSlot);
+//            if (rewardItem == null || rewardItem.getType() == Material.AIR) {
+//                continue;
+//            }
+//
+//            ItemStack q1Item = inv.getItem(q1Slot);
+//            ItemStack q2Item = inv.getItem(q2Slot);
+//
+//            ConfigurationSection section = config.createSection("Items." + tradeIndex);
+//            ItemManager rewardItemManager = new ItemManager(rewardItem);
+//            ItemManager q1ItemManager = new ItemManager(q1Item);
+//            ItemManager q2ItemManager = new ItemManager(q2Item);
+//
+//            setSection(section, "Reward", rewardItemManager);
+//            setSection(section, "Quests.1", q1ItemManager);
+//            setSection(section, "Quests.2", q2ItemManager);
+//
+//            tradeIndex++;
+//        }
 
         try {
             config.save(new File(plugin.getDataFolder(), "Shops/" + id + ".yml"));

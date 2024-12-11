@@ -4,6 +4,10 @@ import dev.lone.itemsadder.api.CustomStack;
 import io.lumine.mythic.lib.api.item.NBTItem;
 import net.Indyuce.mmoitems.MMOItems;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.teenkung.neokeeper.Utils.ItemStackSerialization;
@@ -51,6 +55,8 @@ public class ItemManager {
      */
     private List<Component> customLore;
 
+    private boolean isDefaultName = true;
+
     /**
      * Constructs a new {@code ItemManager} with the specified type, item identifier, and amount.
      *
@@ -74,6 +80,26 @@ public class ItemManager {
         }
 
         this.itemDisplay = item;
+        if (type == null) return;
+        if (type.equalsIgnoreCase("IA")) {
+            CustomStack cStack = CustomStack.getInstance(item);
+            if (cStack != null) {
+                this.customDisplayName = cStack.getItemStack().asOne().displayName();
+            }
+        } else if (type.equalsIgnoreCase("MI")) {
+            String[] args = item.split(":");
+            if (args.length >= 2) {
+                String type2 = args[0];
+                String id = args[1];
+                ItemStack cStack = MMOItems.plugin.getItem(type2, id);
+                if (cStack != null) {
+                    this.customDisplayName = cStack.asOne().displayName();
+                }
+            }
+        } else {
+            this.customDisplayName = null;
+        }
+
     }
 
     /**
@@ -93,13 +119,23 @@ public class ItemManager {
         this.amount = stack.getAmount();
         if (CustomStack.byItemStack(stack) != null) {
             this.type = "IA";
-            this.item = CustomStack.byItemStack(stack).getNamespacedID();
+            CustomStack cstack = CustomStack.byItemStack(stack);
+            this.item = cstack.getNamespacedID();
             this.itemDisplay = item;
+            this.customDisplayName = cstack.getItemStack().asOne().displayName();
+            if (PlainTextComponentSerializer.plainText().serialize(this.customDisplayName) == PlainTextComponentSerializer.plainText().serialize(stack.asOne().displayName())) {
+                this.isDefaultName = true;
+            }
         } else if (NBTItem.get(stack).getType() != null) {
             this.type = "MI";
             NBTItem nbtItem = NBTItem.get(stack);
             this.item = nbtItem.getType() + ":" + nbtItem.getString("MMOITEMS_ITEM_ID");
+            ItemStack cstack = MMOItems.plugin.getItem(nbtItem.getType(), nbtItem.getString("MMOITEMS_ITEM_ID"));
+            this.customDisplayName = cstack.asOne().displayName();
             this.itemDisplay = this.item;
+            if (PlainTextComponentSerializer.plainText().serialize(this.customDisplayName) == PlainTextComponentSerializer.plainText().serialize(stack.asOne().displayName())) {
+                this.isDefaultName = true;
+            }
         } else {
             this.type = "VANILLA";
             this.item = ItemStackSerialization.serialize(stack);
@@ -138,8 +174,8 @@ public class ItemManager {
             returnStack.setAmount(amount);
             ItemMeta meta = returnStack.getItemMeta();
             if (meta != null) {
-                if (customDisplayName != null) {
-                    meta.displayName(customDisplayName);
+                if (customDisplayName != null && !isDefaultName) {
+                    meta.displayName(customDisplayName.decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE));
                 }
                 if (customLore != null) {
                     meta.lore(customLore);
@@ -166,6 +202,13 @@ public class ItemManager {
      */
     @Nullable
     public Component getDisplayName() {
+        if (this.type.equals("IA") && customDisplayName == null) {
+            return CustomStack.byItemStack(getItem()).getItemStack().asOne().displayName();
+        }
+        if (this.type.equals("MI") && customDisplayName == null) {
+            //noinspection DataFlowIssue
+            return MMOItems.plugin.getItem(item.split(":")[0], item.split(":")[1]).asOne().displayName();
+        }
         return customDisplayName;
     }
 

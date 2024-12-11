@@ -1,6 +1,8 @@
 package org.teenkung.neokeeper.Handlers;
 
 import de.tr7zw.nbtapi.NBT;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -12,6 +14,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.teenkung.neokeeper.ConfigLoader;
 import org.teenkung.neokeeper.Managers.InventoryManager;
 import org.teenkung.neokeeper.Managers.ItemManager;
@@ -109,15 +112,16 @@ public class TradeGUIHandler implements Listener {
     }
 
     private boolean handleNextPageEvent(InventoryClickEvent event, TradeInventoryStorage storage, InventoryManager inventoryManager) {
+        if (!TradeInventoryManager.isPluginInventory(event.getClickedInventory())) return false;
         Integer offset = storage.offset();
         if (configLoader.getNextPageSlots().contains(event.getSlot())) {
-            offset = Math.min(inventoryManager.getTradeManagers().size() - 4, offset + configLoader.getSelectorSlots().size());
+            offset = Math.min(inventoryManager.getTradeManagers().size() - 1, offset + 1);
             storage.offset(offset);
             inventoryManager.getTradeGUI().fillSelector((Player) event.getWhoClicked(), offset);
             return true;
         }
         if (configLoader.getPreviousPageSlots().contains(event.getSlot())) {
-            offset = max(0, offset - configLoader.getSelectorSlots().size());
+            offset = max(0, offset - 1);
             storage.offset(offset);
             inventoryManager.getTradeGUI().fillSelector((Player) event.getWhoClicked(), offset);
             return true;
@@ -182,12 +186,25 @@ public class TradeGUIHandler implements Listener {
             return false;
         }
 
+        ItemStack q1item = event.getWhoClicked().getOpenInventory().getTopInventory().getItem(configLoader.getQuest1Slot());
+        ItemStack q2item = event.getWhoClicked().getOpenInventory().getTopInventory().getItem(configLoader.getQuest2Slot());
+
+        boolean itemsValid = checkItems(q1item, q2item, inventoryManager.getTradeManagers().get(storage.selecting()));
+
+        if (!itemsValid) {
+            event.getWhoClicked().sendMessage(MiniMessage.miniMessage().deserialize("<red>How?"));
+            event.setCancelled(true);
+            return false;
+        }
+
+        ItemManager rewardManager = inventoryManager.getTradeManagers().get(storage.selecting()).getRewardManager();
+
         // prevent player putting item back to reward slot
         if (event.getAction() == InventoryAction.PLACE_ONE || event.getAction() == InventoryAction.PLACE_ALL) {
             event.setCancelled(true);
-            if (compare (new ItemManager(event.getCursor()), inventoryManager.getTradeManagers().get(storage.selecting()).getRewardManager())) {
-                if (event.getCursor().getMaxStackSize() >= event.getCursor().getAmount() + 1) {
-                    event.getCursor().setAmount(event.getCursor().getAmount() + 1);
+            if (compare (new ItemManager(event.getCursor()), rewardManager)) {
+                if (event.getCursor().getMaxStackSize() >= event.getCursor().getAmount() + rewardManager.getAmount()) {
+                    event.getCursor().setAmount(event.getCursor().getAmount() + rewardManager.getAmount());
                     return true;
                 }
                 return false;
@@ -212,6 +229,9 @@ public class TradeGUIHandler implements Listener {
     }
 
     private void showReward(Inventory inventory, TradeInventoryStorage storage, InventoryManager inventoryManager) {
+        if (inventoryManager.getTradeManagers().isEmpty()) {
+            return;
+        }
         TradeManager tradeManager = inventoryManager.getTradeManagers().get(storage.selecting());
         ItemStack reward = plugin.getNoItemItem();
         ItemStack q1item = inventory.getItem(configLoader.getQuest1Slot());
@@ -246,50 +266,79 @@ public class TradeGUIHandler implements Listener {
         return q1 && q2;
     }
 
-    private void prepareItem(InventoryClickEvent event, InventoryManager inventoryManager, TradeInventoryStorage storage, @SuppressWarnings("SameParameterValue") boolean playSound) {
-        if (event.getClickedInventory().getItem(configLoader.getQuest1Slot()) != null) {
-            event.getWhoClicked().getInventory().addItem(event.getClickedInventory().getItem(configLoader.getQuest1Slot()));
-        }
-        if (event.getClickedInventory().getItem(configLoader.getQuest2Slot()) != null) {
-            event.getWhoClicked().getInventory().addItem(event.getClickedInventory().getItem(configLoader.getQuest2Slot()));
-        }
-        event.getClickedInventory().setItem(configLoader.getQuest1Slot(), new ItemStack(Material.AIR));
-        event.getClickedInventory().setItem(configLoader.getQuest2Slot(), new ItemStack(Material.AIR));
-        event.getClickedInventory().setItem(configLoader.getRewardSlot(), plugin.getNoItemItem());
+    private void prepareItem(InventoryClickEvent event, InventoryManager inventoryManager, TradeInventoryStorage storage, boolean playSound) {
+        Inventory clickedInv = event.getClickedInventory();
+        Player player = (Player) event.getWhoClicked();
+        PlayerInventory playerInv = player.getInventory();
         TradeManager tradeManager = inventoryManager.getTradeManagers().get(storage.selecting());
+
+        // Return original quest items to player (if present)
+        ItemStack quest1Original = clickedInv.getItem(configLoader.getQuest1Slot());
+        if (quest1Original != null && !quest1Original.getType().isAir()) {
+            playerInv.addItem(quest1Original);
+        }
+        ItemStack quest2Original = clickedInv.getItem(configLoader.getQuest2Slot());
+        if (quest2Original != null && !quest2Original.getType().isAir()) {
+            playerInv.addItem(quest2Original);
+        }
+
+        // Clear quest slots and reset reward
+        clickedInv.setItem(configLoader.getQuest1Slot(), null);
+        clickedInv.setItem(configLoader.getQuest2Slot(), null);
+        clickedInv.setItem(configLoader.getRewardSlot(), plugin.getNoItemItem());
+
+        // Prepare quest item managers and checks
+        ItemManager q1Manager = tradeManager.getQuest1Manager();
+        ItemManager q2Manager = tradeManager.getQuest2Manager();
+        boolean q1None = q1Manager.getStringItem().equalsIgnoreCase("NONE");
+        boolean q2None = q2Manager.getStringItem().equalsIgnoreCase("NONE");
+
         boolean completed_1 = false;
         boolean completed_2 = false;
-        Player player = (Player) event.getWhoClicked();
-        for (int i = 0 ; i < event.getWhoClicked().getInventory().getSize() ; i++) {
-            ItemStack item = event.getWhoClicked().getInventory().getItem(i);
-            if (item == null) continue;
-            if (item.getType().isAir()) continue;
-            if (compare(new ItemManager(item), tradeManager.getQuest1Manager()) && !completed_1) {
-                event.getWhoClicked().getInventory().setItem(i, new ItemStack(Material.AIR));
-                event.getClickedInventory().setItem(configLoader.getQuest1Slot(), item);
+
+        // Attempt to find and move quest items from player's inventory
+        ItemStack[] contents = playerInv.getContents();
+        for (int i = 0; i < contents.length; i++) {
+            ItemStack item = contents[i];
+            if (item == null || item.getType().isAir()) continue;
+
+            // Check quest 1
+            if (!completed_1 && (q1None || compare(new ItemManager(item), q1Manager))) {
+                if (!q1None) {
+                    playerInv.setItem(i, null);
+                    clickedInv.setItem(configLoader.getQuest1Slot(), item);
+                }
                 completed_1 = true;
+                continue;
             }
-            if (compare(new ItemManager(item), tradeManager.getQuest2Manager()) && !completed_2) {
-                event.getClickedInventory().setItem(configLoader.getQuest2Slot(), item);
-                event.getWhoClicked().getInventory().setItem(i, new ItemStack(Material.AIR));
+
+            // Check quest 2
+            if (!completed_2 && (q2None || compare(new ItemManager(item), q2Manager))) {
+                if (!q2None) {
+                    clickedInv.setItem(configLoader.getQuest2Slot(), item);
+                    playerInv.setItem(i, null);
+                }
                 completed_2 = true;
+                continue;
             }
+
+            // Break early if both quests are satisfied
             if (completed_1 && completed_2) {
                 if (playSound) {
                     player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.33F, 1);
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 2);
                 }
-                break;
+                return;
             }
         }
-        if (completed_1 && completed_2) {
-            return;
-        }
+
+        // If we reach here, not both quests were completed
         if (playSound) {
             player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.33F, 1);
             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 1, 1);
         }
     }
+
 
     private void deductItem(InventoryClickEvent event, TradeManager manager) {
         ItemStack q1 = event.getClickedInventory().getItem(configLoader.getQuest1Slot());
@@ -303,6 +352,43 @@ public class TradeGUIHandler implements Listener {
     }
 
     private boolean compare(ItemManager item1, ItemManager item2) {
-        return item1.getStringItem().equals(item2.getStringItem());
+        // Always check stringItem and type first
+        boolean baseMatch = item1.getStringItem().equals(item2.getStringItem())
+                && item1.getType().equals(item2.getType());
+
+        if (!baseMatch) {
+            return false;
+        }
+
+        boolean item1HasName = item1.hasDisplayName();
+        boolean item2HasName = item2.hasDisplayName();
+        boolean item1HasItem = item1.getItem() != null;
+        boolean item2HasItem = item2.getItem() != null;
+
+        if (item1HasName && item2HasName) {
+            if (!PlainTextComponentSerializer.plainText().serialize(item1.getDisplayName()).equals(PlainTextComponentSerializer.plainText().serialize(item2.getDisplayName()))) {
+                return false;
+            }
+        }
+
+        // If one has and the other doesn't, they don't match
+        if (item1HasName != item2HasName) {
+            return false;
+        }
+
+        // If both have an item, but they're different, they don't match
+        if (item1HasItem && item2HasItem) {
+            if (item1.getItem().getType() != item2.getItem().getType()) {
+                return false;
+            }
+        }
+
+        // If one has and the other doesn't, they don't match
+        if (item1HasItem != item2HasItem) {
+            return false;
+        }
+
+        return true;
     }
+
 }

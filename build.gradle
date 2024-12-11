@@ -37,7 +37,8 @@ repositories {
 }
 
 dependencies {
-    compileOnly "io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT"
+    compileOnly("io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT")
+    implementation "net.kyori:adventure-text-serializer-legacy:4.17.0"
     compileOnly 'com.github.LoneDev6:api-itemsadder:3.6.1'
     compileOnly 'dev.lone:LoneLibs:1.0.58'
     compileOnly 'de.tr7zw:item-nbt-api-plugin:2.14.0'

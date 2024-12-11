@@ -1,4 +1,5 @@
 GUI:
+  DefaultTitle: "Default Title"
   Layout:
     - NNNBBBBBB
     - EETEBBDBB

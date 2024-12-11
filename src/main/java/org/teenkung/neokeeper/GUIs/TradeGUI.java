@@ -66,7 +66,7 @@ public class TradeGUI {
                 int q1 = slots[0];
                 int q2 = slots[1];
                 int r = slots[2];
-
+                if (tradeIndex < 0) return;
                 if (tradeIndex >= tradeManagers.size()) {
                     inv.setItem(q1, noItem);
                     inv.setItem(q2, noItem);

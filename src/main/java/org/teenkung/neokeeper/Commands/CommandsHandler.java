@@ -18,6 +18,7 @@ public class CommandsHandler implements CommandExecutor {
     private final RemoveCommand removeCommand;
     private final ReloadCommand reloadCommand;
     private final HelpCommand helpCommand;
+    private final BindNPCCommand bindNPC;
 
     public CommandsHandler(NeoKeeper plugin) {
         this.plugin = plugin;
@@ -27,6 +28,7 @@ public class CommandsHandler implements CommandExecutor {
         this.removeCommand = new RemoveCommand();
         this.reloadCommand = new ReloadCommand();
         this.helpCommand = new HelpCommand();
+        this.bindNPC = new BindNPCCommand();
     }
 
     @Override
@@ -40,6 +42,7 @@ public class CommandsHandler implements CommandExecutor {
                     case "create" -> createCommand.execute(plugin, sender, args);
                     case "remove" -> removeCommand.execute(plugin, sender, args);
                     case "reload" -> reloadCommand.execute(plugin, sender, args);
+                    case "bindnpc" -> bindNPC.execute(plugin, sender, args);
                     default -> {
                         helpCommand.execute(plugin, sender, args);
                     }
