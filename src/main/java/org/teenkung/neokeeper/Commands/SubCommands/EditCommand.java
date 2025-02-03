@@ -14,7 +14,7 @@ public class EditCommand {
         if (args.length == 2) {
             String id = args[1];
             if (plugin.getShopManager().getAllTradeManagers().containsKey(id)) {
-                plugin.getShopManager().getTradeManager(id).getEditGUI().buildEditGUI((Player) player);
+                plugin.getShopManager().getTradeManager(id).getEditGUI().openEditGUI((Player) player);
             } else {
                 player.sendMessage(plugin.colorize("<red>Could not find shop with id: " + id));
             }
