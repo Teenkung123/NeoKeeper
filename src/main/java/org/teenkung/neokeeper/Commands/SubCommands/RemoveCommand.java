@@ -9,6 +9,10 @@ public class RemoveCommand {
         if (args.length == 2) {
             String id = args[1];
             if (plugin.getShopManager().getAllTradeManagers().containsKey(id)) {
+                boolean wasNpcShop = plugin.getShopManager().getTradeManager(id).isHidden();
+                if (wasNpcShop && plugin.getCitizensUtils().isAllowedCitizens()) {
+                    plugin.getCitizensUtils().removeShopkeeper(id);
+                }
                 if (plugin.getShopManager().deleteShop(id, true)) {
                     player.sendMessage(plugin.colorize("<green>Successfully deleted shop id: " + id));
                     player.sendMessage(plugin.colorize("<yellow>Note: if plugin still show the shop with that ID, try reload the plugin"));

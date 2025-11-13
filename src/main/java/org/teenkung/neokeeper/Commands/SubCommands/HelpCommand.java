@@ -1,7 +1,6 @@
 package org.teenkung.neokeeper.Commands.SubCommands;
 
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.teenkung.neokeeper.NeoKeeper;
 
 public class HelpCommand {
@@ -13,6 +12,8 @@ public class HelpCommand {
         player.sendMessage(plugin.colorize(plugin.getPrefix() + "    <green>/neokeeper open <shopID>"));
         player.sendMessage(plugin.colorize(plugin.getPrefix() + "    <green>/neokeeper edit <shopID>"));
         player.sendMessage(plugin.colorize(plugin.getPrefix() + "    <green>/neokeeper remove <shopID>"));
+        player.sendMessage(plugin.colorize(plugin.getPrefix() + "    <green>/neokeeper bindnpc <shopID>"));
+        player.sendMessage(plugin.colorize(plugin.getPrefix() + "    <green>/neokeeper npc [title]"));
         player.sendMessage(plugin.colorize(plugin.getPrefix() + "    <green>/neokeeper reload"));
         player.sendMessage(plugin.colorize(plugin.getPrefix() + "    <green>/neokeeper help"));
     }

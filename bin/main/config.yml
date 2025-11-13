@@ -1,0 +1,52 @@
+GUI:
+  DefaultTitle: "Default Title"
+  Layout:
+    - NNNBBBBBB
+    - EETEBBDBB
+    - EETEBBFBB
+    - EETEBBBBB
+    - EETEBBBBB
+    - PPPBBBBBB
+  Items:
+    N:
+      Type: VANILLA
+      Item: LIME_STAINED_GLASS_PANE
+      Display: "&aNext Page"
+      Lore: []
+      ModelData: 0
+    P:
+      Type: VANILLA
+      Item: RED_STAINED_GLASS_PANE
+      Display: "&cPrevious Page"
+      Lore: []
+      ModelData: 0
+    B:
+      Type: VANILLA
+      Item: BLACK_STAINED_GLASS_PANE
+      Display: "&f"
+      Lore: []
+      ModelData: 0
+    D:
+      Type: VANILLA
+      Item: BLACK_STAINED_GLASS_PANE
+      Display: "&f"
+      Lore: []
+      ModelData: 1
+    F:
+      Type: VANILLA
+      Item: BLACK_STAINED_GLASS_PANE
+      Display: "&f"
+      Lore: []
+      ModelData: 2
+  Slot:
+    Quest1: 13
+    Quest2: 15
+    Reward: 33
+    NextPage: [45, 46, 47]
+    PreviousPage: [0, 1, 2]
+    #Order: Q1, Q1, Reward
+    Lists:
+      - "9:10:12"
+      - "18:19:21"
+      - "27:28:30"
+      - "36:37:39"

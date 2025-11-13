@@ -12,6 +12,7 @@ import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.teenkung.neokeeper.Managers.InventoryManager;
+import org.teenkung.neokeeper.Utils.ExcellentCratesHook;
 import org.teenkung.neokeeper.Managers.Trades.TradeInventoryManager;
 import org.teenkung.neokeeper.Managers.Trades.TradeManager;
 import org.teenkung.neokeeper.NeoKeeper;
@@ -149,6 +150,18 @@ public class TradeGUI {
                 stack = MMOItems.plugin.getItem(mmoType, id);
                 if (stack == null) {
                     plugin.getLogger().warning("MMOItem " + id + " not found.");
+                    stack = new ItemStack(Material.BARRIER);
+                }
+                break;
+
+            case "EC_KEY":
+            case "EC":
+                ItemStack keyStack = ExcellentCratesHook.getKeyItem(item);
+                if (keyStack != null) {
+                    stack = keyStack.clone();
+                    stack.setAmount(amount);
+                } else {
+                    plugin.getLogger().warning("ExcellentCrates key " + item + " could not be resolved.");
                     stack = new ItemStack(Material.BARRIER);
                 }
                 break;

@@ -20,6 +20,7 @@ public class InventoryManager {
     private final String id;
     private final List<TradeManager> tradeManagers;
     private Component title;
+    private final boolean hidden;
     private TradeGUI tradeGUI;
     private EditGUI editGUI;
 
@@ -27,6 +28,8 @@ public class InventoryManager {
         this.plugin = plugin;
         this.config = config;
         this.id = id;
+
+        this.hidden = config.getBoolean("Option.Hidden", false);
 
         // Load TradeManagers from the configuration
         List<TradeManager> tempTradeManagers = new ArrayList<>();
@@ -53,6 +56,10 @@ public class InventoryManager {
     public void setTitle(Component title) {
         config.set("Option.Title", title);
         this.title = title;
+    }
+
+    public boolean isHidden() {
+        return hidden;
     }
 
     public List<TradeManager> getTradeManagers() {

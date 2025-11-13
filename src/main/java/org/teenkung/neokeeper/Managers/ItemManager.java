@@ -3,6 +3,9 @@ package org.teenkung.neokeeper.Managers;
 import dev.lone.itemsadder.api.CustomStack;
 import io.lumine.mythic.lib.api.item.NBTItem;
 import net.Indyuce.mmoitems.MMOItems;
+import net.Indyuce.mmoitems.api.Type;
+import net.Indyuce.mmoitems.api.item.template.MMOItemTemplate;
+import net.Indyuce.mmoitems.api.player.RPGPlayer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -10,6 +13,7 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.teenkung.neokeeper.Utils.ExcellentCratesHook;
 import org.teenkung.neokeeper.Utils.ItemStackSerialization;
 
 import javax.annotation.Nullable;
@@ -71,23 +75,31 @@ public class ItemManager {
 
         if (this.type == null) {
             this.type = "NONE";
+        } else if (this.type.equalsIgnoreCase("EC_KEY")) {
+            this.type = "EC";
+        } else {
+            this.type = this.type.toUpperCase();
         }
+
         if (this.item == null) {
             this.item = "NONE";
         }
-        if (this.type.equalsIgnoreCase("NONE") || this.item.equalsIgnoreCase("NONE")) {
+
+        if (this.type.equals("NONE") || this.item.equalsIgnoreCase("NONE")) {
             this.amount = 0;
         }
 
-        this.itemDisplay = item;
-        if (type == null) return;
-        if (type.equalsIgnoreCase("IA")) {
-            CustomStack cStack = CustomStack.getInstance(item);
+        this.itemDisplay = this.item;
+
+        if (this.type.equals("EC")) {
+            this.customDisplayName = ExcellentCratesHook.getKeyDisplay(this.item);
+        } else if (this.type.equals("IA")) {
+            CustomStack cStack = CustomStack.getInstance(this.item);
             if (cStack != null) {
                 this.customDisplayName = cStack.getItemStack().asOne().displayName();
             }
-        } else if (type.equalsIgnoreCase("MI")) {
-            String[] args = item.split(":");
+        } else if (this.type.equals("MI")) {
+            String[] args = this.item.split(":");
             if (args.length >= 2) {
                 String type2 = args[0];
                 String id = args[1];
@@ -96,18 +108,9 @@ public class ItemManager {
                     this.customDisplayName = cStack.asOne().displayName();
                 }
             }
-        } else {
-            this.customDisplayName = null;
         }
-
     }
 
-    /**
-     * Constructs a new {@code ItemManager} based on the provided {@link ItemStack}.
-     * Determines the item type and serializes the item accordingly.
-     *
-     * @param stack the {@code ItemStack} to be managed; can be {@code null}
-     */
     public ItemManager(@Nullable ItemStack stack) {
         if (stack == null) {
             this.type = "NONE";
@@ -116,33 +119,71 @@ public class ItemManager {
             this.amount = 0;
             return;
         }
+
         this.amount = stack.getAmount();
+
+        String ecKeyId = ExcellentCratesHook.getKeyId(stack);
+        if (ecKeyId != null) {
+            this.type = "EC";
+            this.item = ecKeyId;
+            this.itemDisplay = this.item;
+            Component defaultDisplay = ExcellentCratesHook.getKeyDisplay(this.item);
+            this.customDisplayName = defaultDisplay;
+
+            ItemMeta stackMeta = stack.getItemMeta();
+            if (stackMeta != null && stackMeta.displayName() != null) {
+                Component actual = stackMeta.displayName();
+                if (defaultDisplay != null) {
+                    String expected = PlainTextComponentSerializer.plainText().serialize(defaultDisplay);
+                    String actualPlain = PlainTextComponentSerializer.plainText().serialize(actual);
+                    if (expected.equals(actualPlain)) {
+                        this.isDefaultName = true;
+                    } else {
+                        this.customDisplayName = actual;
+                        this.isDefaultName = false;
+                    }
+                } else {
+                    this.customDisplayName = actual;
+                    this.isDefaultName = false;
+                }
+            } else {
+                this.isDefaultName = defaultDisplay == null;
+            }
+            return;
+        }
+
         if (CustomStack.byItemStack(stack) != null) {
             this.type = "IA";
             CustomStack cstack = CustomStack.byItemStack(stack);
             this.item = cstack.getNamespacedID();
-            this.itemDisplay = item;
+            this.itemDisplay = this.item;
             this.customDisplayName = cstack.getItemStack().asOne().displayName();
-            if (PlainTextComponentSerializer.plainText().serialize(this.customDisplayName) == PlainTextComponentSerializer.plainText().serialize(stack.asOne().displayName())) {
+            if (PlainTextComponentSerializer.plainText().serialize(this.customDisplayName)
+                    .equals(PlainTextComponentSerializer.plainText().serialize(stack.asOne().displayName()))) {
                 this.isDefaultName = true;
             }
-        } else if (NBTItem.get(stack).getType() != null) {
+            return;
+        }
+
+        if (NBTItem.get(stack).getType() != null) {
             this.type = "MI";
             NBTItem nbtItem = NBTItem.get(stack);
             this.item = nbtItem.getType() + ":" + nbtItem.getString("MMOITEMS_ITEM_ID");
             ItemStack cstack = MMOItems.plugin.getItem(nbtItem.getType(), nbtItem.getString("MMOITEMS_ITEM_ID"));
             this.customDisplayName = cstack.asOne().displayName();
             this.itemDisplay = this.item;
-            if (PlainTextComponentSerializer.plainText().serialize(this.customDisplayName) == PlainTextComponentSerializer.plainText().serialize(stack.asOne().displayName())) {
+            if (PlainTextComponentSerializer.plainText().serialize(this.customDisplayName)
+                    .equals(PlainTextComponentSerializer.plainText().serialize(stack.asOne().displayName()))) {
                 this.isDefaultName = true;
             }
-        } else {
-            this.type = "VANILLA";
-            this.item = ItemStackSerialization.serialize(stack);
-            ItemStack stackClone = stack.clone();
-            stackClone.setAmount(1);
-            this.itemDisplay = ItemStackSerialization.serialize(stackClone);
+            return;
         }
+
+        this.type = "VANILLA";
+        this.item = ItemStackSerialization.serialize(stack);
+        ItemStack stackClone = stack.clone();
+        stackClone.setAmount(1);
+        this.itemDisplay = ItemStackSerialization.serialize(stackClone);
     }
 
     /**
@@ -154,20 +195,25 @@ public class ItemManager {
      */
     public ItemStack getItem() {
         ItemStack returnStack = null;
-        if (this.type.equalsIgnoreCase("IA")) {
-            CustomStack customStack = CustomStack.getInstance(item);
+        if (this.type.equals("EC")) {
+            ItemStack keyStack = ExcellentCratesHook.getKeyItem(this.item);
+            if (keyStack != null) {
+                returnStack = keyStack;
+            }
+        } else if (this.type.equals("IA")) {
+            CustomStack customStack = CustomStack.getInstance(this.item);
             if (customStack != null) {
                 returnStack = customStack.getItemStack();
             }
-        } else if (this.type.equalsIgnoreCase("MI")) {
-            String[] args = item.split(":");
+        } else if (this.type.equals("MI")) {
+            String[] args = this.item.split(":");
             if (args.length >= 2) {
                 String type = args[0];
                 String id = args[1];
                 returnStack = MMOItems.plugin.getItem(type, id);
             }
-        } else if (this.type.equalsIgnoreCase("VANILLA")) {
-            returnStack = ItemStackSerialization.deserialize(item);
+        } else if (this.type.equals("VANILLA")) {
+            returnStack = ItemStackSerialization.deserialize(this.item);
         }
 
         if (returnStack != null) {
@@ -193,6 +239,7 @@ public class ItemManager {
      */
     public void setDisplayName(Component displayName) {
         this.customDisplayName = displayName;
+        this.isDefaultName = displayName == null;
     }
 
     /**
@@ -202,12 +249,14 @@ public class ItemManager {
      */
     @Nullable
     public Component getDisplayName() {
+        if (this.type.equals("EC") && customDisplayName == null) {
+            return ExcellentCratesHook.getKeyDisplay(this.item);
+        }
         if (this.type.equals("IA") && customDisplayName == null) {
             return CustomStack.byItemStack(getItem()).getItemStack().asOne().displayName();
         }
         if (this.type.equals("MI") && customDisplayName == null) {
-            //noinspection DataFlowIssue
-            return MMOItems.plugin.getItem(item.split(":")[0], item.split(":")[1]).asOne().displayName();
+            return MMOItems.plugin.getItem(this.item.split(":")[0], this.item.split(":")[1]).asOne().displayName();
         }
         return customDisplayName;
     }

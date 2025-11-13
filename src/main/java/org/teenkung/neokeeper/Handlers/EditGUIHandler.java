@@ -5,7 +5,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.teenkung.neokeeper.GUIs.EditGUI;
@@ -29,8 +28,12 @@ public class EditGUIHandler implements Listener {
     public void onInventoryClick(InventoryClickEvent event) {
         Inventory clickedInv = event.getClickedInventory();
         if (clickedInv == null) return;
+
         InventoryHolder holder = clickedInv.getHolder();
-        if (!(holder instanceof EditInventoryHolder(String shopId, int page))) return;
+        if (!(holder instanceof EditInventoryHolder ih)) return;
+
+        String shopId = ih.shopId();
+        int page = ih.page();
 
         // Get metadata from our custom holder.
         // Retrieve the EditGUI instance from your TradeManager.
@@ -67,13 +70,6 @@ public class EditGUIHandler implements Listener {
             // Allow interaction with the trade area (rows 1–3) so the player can move items.
             event.setCancelled(false);
         }
-    }
-
-    @EventHandler
-    public void onInventoryClose(InventoryCloseEvent event) {
-        // Optionally you can clean up or persist page cache here if the editing session is over.
-        // In this example the EditGUI instance (held by the TradeManager) keeps its page cache
-        // until a save or deletion occurs.
     }
 
     @EventHandler

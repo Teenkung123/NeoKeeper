@@ -1,10 +1,12 @@
 package org.teenkung.neokeeper;
 
 import de.tr7zw.nbtapi.NBT;
+import dev.lone.itemsadder.api.CustomBlock;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.Inventory;
@@ -13,6 +15,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.teenkung.neokeeper.Commands.CommandTabComplete;
 import org.teenkung.neokeeper.Commands.CommandsHandler;
+import org.teenkung.neokeeper.Handlers.CitizensNPCListener;
 import org.teenkung.neokeeper.Handlers.EditGUIHandler;
 import org.teenkung.neokeeper.Handlers.TradeGUIHandler;
 import org.teenkung.neokeeper.Managers.Edit.EditInventoryManager;
@@ -36,6 +39,9 @@ public final class NeoKeeper extends JavaPlugin {
 
         Bukkit.getPluginManager().registerEvents(new TradeGUIHandler(this), this);
         Bukkit.getPluginManager().registerEvents(new EditGUIHandler(this), this);
+        if (citizensUtils.isAllowedCitizens()) {
+            Bukkit.getPluginManager().registerEvents(new CitizensNPCListener(this), this);
+        }
 
         PluginCommand cmd = getCommand("neokeeper");
         if (cmd != null) {
@@ -67,6 +73,7 @@ public final class NeoKeeper extends JavaPlugin {
         this.shopManager = new ShopManager(this);
         this.citizensUtils = new CitizensUtils(this);
         shopManager.loadAllShop();
+        CustomBlock.getBaseBlockData()
     }
 
     public ShopManager getShopManager() { return shopManager; }
@@ -123,3 +130,4 @@ public final class NeoKeeper extends JavaPlugin {
         return prefix;
     }
 }
+

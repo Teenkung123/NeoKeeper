@@ -34,29 +34,32 @@ repositories {
         name = 'citizens'
         url = 'https://maven.citizensnpcs.co/repo'
     }
+    maven {
+        name = 'excellentcrates'
+        url = 'https://repo.nightexpressdev.com/releases'
+    }
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:1.20.1-R0.1-SNAPSHOT")
     implementation "net.kyori:adventure-text-serializer-legacy:4.17.0"
-    compileOnly 'com.github.LoneDev6:api-itemsadder:3.6.1'
-    compileOnly 'dev.lone:LoneLibs:1.0.58'
     compileOnly 'de.tr7zw:item-nbt-api-plugin:2.14.0'
-    compileOnly 'io.lumine:MythicLib-dist:1.6.2-SNAPSHOT'
-    compileOnly 'net.Indyuce:MMOItems-API:6.9.5-SNAPSHOT'
     compileOnly 'net.citizensnpcs:citizensapi:2.0.35-SNAPSHOT'
+    compileOnly 'io.lumine:MythicLib-dist:1.7.1-SNAPSHOT'
+    compileOnly 'net.Indyuce:MMOItems-API:6.10.1-SNAPSHOT'
+    compileOnly 'dev.lone:api-itemsadder:4.0.10'
 }
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(17)
     }
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 tasks.withType(JavaCompile).configureEach {
-    options.release = 21
+    options.release = 17
 }
 
 processResources {

@@ -1,10 +1,8 @@
 package org.teenkung.neokeeper.Commands;
 
-import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.teenkung.neokeeper.Commands.SubCommands.*;
 import org.teenkung.neokeeper.NeoKeeper;
@@ -18,7 +16,8 @@ public class CommandsHandler implements CommandExecutor {
     private final RemoveCommand removeCommand;
     private final ReloadCommand reloadCommand;
     private final HelpCommand helpCommand;
-    private final BindNPCCommand bindNPC;
+    private final BindNPCCommand bindNPCCommand;
+    private final NpcCommand npcCommand;
 
     public CommandsHandler(NeoKeeper plugin) {
         this.plugin = plugin;
@@ -28,7 +27,8 @@ public class CommandsHandler implements CommandExecutor {
         this.removeCommand = new RemoveCommand();
         this.reloadCommand = new ReloadCommand();
         this.helpCommand = new HelpCommand();
-        this.bindNPC = new BindNPCCommand();
+        this.bindNPCCommand = new BindNPCCommand();
+        this.npcCommand = new NpcCommand();
     }
 
     @Override
@@ -41,8 +41,9 @@ public class CommandsHandler implements CommandExecutor {
                     case "edit" -> editCommand.execute(plugin, sender, args);
                     case "create" -> createCommand.execute(plugin, sender, args);
                     case "remove" -> removeCommand.execute(plugin, sender, args);
+                    case "bindnpc" -> bindNPCCommand.execute(plugin, sender, args);
                     case "reload" -> reloadCommand.execute(plugin, sender, args);
-                    case "bindnpc" -> bindNPC.execute(plugin, sender, args);
+                    case "npc" -> npcCommand.execute(plugin, sender, args);
                     default -> {
                         helpCommand.execute(plugin, sender, args);
                     }

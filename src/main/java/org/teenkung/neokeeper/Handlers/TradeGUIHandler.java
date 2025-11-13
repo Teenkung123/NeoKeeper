@@ -4,7 +4,6 @@ import de.tr7zw.nbtapi.NBT;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -61,6 +60,7 @@ public class TradeGUIHandler implements Listener {
         Player player = (Player) event.getWhoClicked();
         Inventory inventory = player.getOpenInventory().getTopInventory();
         Inventory clickedInventory = event.getClickedInventory();
+        boolean clickedPluginInventory = clickedInventory != null && TradeInventoryManager.isPluginInventory(clickedInventory);
         ItemStack currentItem = event.getCurrentItem();
         Integer slot = event.getSlot();
         if (!TradeInventoryManager.isPluginInventory(inventory)) {
@@ -69,7 +69,7 @@ public class TradeGUIHandler implements Listener {
         if (event.getAction() == InventoryAction.COLLECT_TO_CURSOR) {
             event.setCancelled(true);
         }
-        if ((!slot.equals(configLoader.getQuest1Slot()) && !slot.equals(configLoader.getQuest2Slot()) && !slot.equals(configLoader.getRewardSlot())) && TradeInventoryManager.isPluginInventory(clickedInventory)) {
+        if ((!slot.equals(configLoader.getQuest1Slot()) && !slot.equals(configLoader.getQuest2Slot()) && !slot.equals(configLoader.getRewardSlot())) && clickedPluginInventory) {
             event.setCancelled(true);
         }
 
@@ -129,6 +129,10 @@ public class TradeGUIHandler implements Listener {
         return false;
     }
     private boolean handleSelectorEvent(InventoryClickEvent event, TradeInventoryStorage storage, InventoryManager inventoryManager) {
+        Inventory clickedInventory = event.getClickedInventory();
+        if (clickedInventory == null || !TradeInventoryManager.isPluginInventory(clickedInventory)) {
+            return false;
+        }
         if (event.getCurrentItem() == null) {
             return false;
         }
@@ -145,11 +149,15 @@ public class TradeGUIHandler implements Listener {
         return true;
     }
     private boolean handleQuestEvent(InventoryClickEvent event, TradeInventoryStorage storage, InventoryManager inventoryManager) {
+        Inventory clickedInventory = event.getClickedInventory();
+        if (clickedInventory == null || !TradeInventoryManager.isPluginInventory(clickedInventory)) {
+            return false;
+        }
         if (event.getSlot() != configLoader.getQuest1Slot() && event.getSlot() != configLoader.getQuest2Slot()) {
             return false;
         }
-        ItemManager q1Item = new ItemManager(event.getClickedInventory().getItem(configLoader.getQuest1Slot()));
-        ItemManager q2Item = new ItemManager(event.getClickedInventory().getItem(configLoader.getQuest2Slot()));
+        ItemManager q1Item = new ItemManager(clickedInventory.getItem(configLoader.getQuest1Slot()));
+        ItemManager q2Item = new ItemManager(clickedInventory.getItem(configLoader.getQuest2Slot()));
         for (int i = 0 ; i < inventoryManager.getTradeManagers().size() ; i++) {
             TradeManager tradeManager = inventoryManager.getTradeManagers().get(i);
             if (compare(q1Item, tradeManager.getQuest1Manager()) && compare(q2Item, tradeManager.getQuest2Manager())) {
@@ -160,6 +168,10 @@ public class TradeGUIHandler implements Listener {
         return false;
     }
     private boolean handleTradeEvent(InventoryClickEvent event, TradeInventoryStorage storage, InventoryManager inventoryManager) {
+        Inventory clickedInventory = event.getClickedInventory();
+        if (clickedInventory == null || !TradeInventoryManager.isPluginInventory(clickedInventory)) {
+            return false;
+        }
         if (event.getSlot() != configLoader.getRewardSlot()) {
             return false;
         }
@@ -186,8 +198,8 @@ public class TradeGUIHandler implements Listener {
             return false;
         }
 
-        ItemStack q1item = event.getWhoClicked().getOpenInventory().getTopInventory().getItem(configLoader.getQuest1Slot());
-        ItemStack q2item = event.getWhoClicked().getOpenInventory().getTopInventory().getItem(configLoader.getQuest2Slot());
+        ItemStack q1item = clickedInventory.getItem(configLoader.getQuest1Slot());
+        ItemStack q2item = clickedInventory.getItem(configLoader.getQuest2Slot());
 
         boolean itemsValid = checkItems(q1item, q2item, inventoryManager.getTradeManagers().get(storage.selecting()));
 
@@ -215,13 +227,13 @@ public class TradeGUIHandler implements Listener {
         // shift click functionality
         if (event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
             event.setCancelled(true);
-            while (checkItems(event.getClickedInventory().getItem(configLoader.getQuest1Slot()), event.getClickedInventory().getItem(configLoader.getQuest2Slot()), inventoryManager.getTradeManagers().get(storage.selecting()))) {
+            while (checkItems(clickedInventory.getItem(configLoader.getQuest1Slot()), clickedInventory.getItem(configLoader.getQuest2Slot()), inventoryManager.getTradeManagers().get(storage.selecting()))) {
                 if (event.getWhoClicked().getInventory().firstEmpty() == -1) break;
-                event.getWhoClicked().getInventory().addItem(event.getClickedInventory().getItem(configLoader.getRewardSlot()));
+                event.getWhoClicked().getInventory().addItem(clickedInventory.getItem(configLoader.getRewardSlot()));
                 deductItem(event, inventoryManager.getTradeManagers().get(storage.selecting()));
             }
-            event.getClickedInventory().setItem(configLoader.getRewardSlot(), plugin.getNoItemItem());
-            Bukkit.getScheduler().runTaskLater(plugin, () -> showReward(event.getClickedInventory(), storage, inventoryManager), 1);
+            clickedInventory.setItem(configLoader.getRewardSlot(), plugin.getNoItemItem());
+            Bukkit.getScheduler().runTaskLater(plugin, () -> showReward(clickedInventory, storage, inventoryManager), 1);
             return false;
         }
 

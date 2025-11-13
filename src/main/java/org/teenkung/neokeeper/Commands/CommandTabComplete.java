@@ -27,14 +27,18 @@ public class CommandTabComplete implements TabCompleter {
             result.add("reload");
             result.add("create");
             result.add("remove");
-            result.add("bindNPC");
+            result.add("bindnpc");
+            result.add("npc");
         } else if (args.length == 2) {
             String arg = args[0].toLowerCase();
-            if (arg.equalsIgnoreCase("edit") || arg.equalsIgnoreCase("open") || arg.equalsIgnoreCase("remove") || arg.equalsIgnoreCase("bindNPC")) {
-                result.addAll(plugin.getShopManager().getAllTradeManagers().keySet());
+            if (arg.equalsIgnoreCase("edit") || arg.equalsIgnoreCase("open") || arg.equalsIgnoreCase("remove") || arg.equalsIgnoreCase("bindnpc")) {
+                result.addAll(plugin.getShopManager().getVisibleShopIds());
             }
             if (arg.equalsIgnoreCase("create")) {
                 result.add("<shopID>");
+            }
+            if (arg.equalsIgnoreCase("npc")) {
+                result.add("[title]");
             }
         } else if (args.length == 3) {
             String arg = args[0].toLowerCase();
