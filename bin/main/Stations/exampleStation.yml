@@ -1,0 +1,17 @@
+Option:
+  Title: Example Station
+Recipes:
+  0:
+    Result:
+      Type: VANILLA
+      Item: DIAMOND_SWORD
+      Amount: 1
+    Materials:
+      0:
+        Type: VANILLA
+        Item: DIAMOND
+        Amount: 2
+      1:
+        Type: VANILLA
+        Item: STICK
+        Amount: 1

@@ -14,10 +14,13 @@ import java.util.Optional;
 public class CitizensUtils {
 
     private static final String SHOP_DATA_KEY = "neokeeper.shop-id";
+    private static final String STATION_DATA_KEY = "neokeeper.station-id";
 
     private final NeoKeeper plugin;
     private final Map<Integer, String> npcToShop = new HashMap<>();
     private final Map<String, Integer> shopToNpc = new HashMap<>();
+    private final Map<Integer, String> npcToStation = new HashMap<>();
+    private final Map<String, Integer> stationToNpc = new HashMap<>();
     private boolean allowedCitizens = false;
 
     public CitizensUtils(NeoKeeper plugin) {
@@ -40,14 +43,20 @@ public class CitizensUtils {
         try {
             for (NPC npc : CitizensAPI.getNPCRegistry()) {
                 if (!npc.data().has(SHOP_DATA_KEY)) {
-                    continue;
+                } else {
+                    String shopId = npc.data().get(SHOP_DATA_KEY);
+                    if (shopId != null && !shopId.isEmpty()) {
+                        npcToShop.put(npc.getId(), shopId);
+                        shopToNpc.put(shopId, npc.getId());
+                    }
                 }
-                String shopId = npc.data().get(SHOP_DATA_KEY);
-                if (shopId == null || shopId.isEmpty()) {
-                    continue;
+                if (npc.data().has(STATION_DATA_KEY)) {
+                    String stationId = npc.data().get(STATION_DATA_KEY);
+                    if (stationId != null && !stationId.isEmpty()) {
+                        npcToStation.put(npc.getId(), stationId);
+                        stationToNpc.put(stationId, npc.getId());
+                    }
                 }
-                npcToShop.put(npc.getId(), shopId);
-                shopToNpc.put(shopId, npc.getId());
             }
         } catch (Exception exception) {
             plugin.getLogger().warning("Failed to load Citizens NPC bindings: " + exception.getMessage());
@@ -80,6 +89,24 @@ public class CitizensUtils {
         return Optional.ofNullable(shopToNpc.get(shopId));
     }
 
+    public Optional<String> getStationId(int npcId) {
+        if (!npcToStation.containsKey(npcId) && allowedCitizens) {
+            NPC npc = CitizensAPI.getNPCRegistry().getById(npcId);
+            if (npc != null && npc.data().has(STATION_DATA_KEY)) {
+                String stationId = npc.data().get(STATION_DATA_KEY);
+                if (stationId != null) {
+                    npcToStation.put(npcId, stationId);
+                    stationToNpc.put(stationId, npcId);
+                }
+            }
+        }
+        return Optional.ofNullable(npcToStation.get(npcId));
+    }
+
+    public Optional<Integer> getNpcIdForStation(String stationId) {
+        return Optional.ofNullable(stationToNpc.get(stationId));
+    }
+
     public boolean isShopkeeper(NPC npc) {
         return npc != null && npcToShop.containsKey(npc.getId());
     }
@@ -89,6 +116,14 @@ public class CitizensUtils {
             return false;
         }
         registerShopkeeper(npc, shopId);
+        return true;
+    }
+
+    public boolean bindExistingStationNpc(NPC npc, String stationId) {
+        if (!allowedCitizens || npc == null || stationId == null || stationId.isEmpty()) {
+            return false;
+        }
+        registerStationNpc(npc, stationId);
         return true;
     }
 
@@ -105,6 +140,23 @@ public class CitizensUtils {
             return new ShopkeeperCreationResult(npc.getId(), npc.getName());
         } catch (Exception exception) {
             plugin.getLogger().severe("Failed to create shopkeeper NPC: " + exception.getMessage());
+            return null;
+        }
+    }
+
+    public StationCreationResult createStationNPC(Player player, String displayName, String stationId) {
+        if (!allowedCitizens) {
+            return null;
+        }
+        try {
+            NPC npc = CitizensAPI.getNPCRegistry().createNPC(EntityType.VILLAGER, displayName);
+            npc.setName(displayName);
+            npc.setProtected(true);
+            registerStationNpc(npc, stationId);
+            npc.spawn(player.getLocation());
+            return new StationCreationResult(npc.getId(), npc.getName());
+        } catch (Exception exception) {
+            plugin.getLogger().severe("Failed to create station NPC: " + exception.getMessage());
             return null;
         }
     }
@@ -133,6 +185,30 @@ public class CitizensUtils {
         shopToNpc.put(shopId, npc.getId());
     }
 
+    private void registerStationNpc(NPC npc, String stationId) {
+        if (npc == null || stationId == null || stationId.isEmpty()) {
+            return;
+        }
+
+        String existingStation = npcToStation.get(npc.getId());
+        if (existingStation != null && !existingStation.equalsIgnoreCase(stationId)) {
+            stationToNpc.remove(existingStation);
+        }
+
+        Integer existingNpc = stationToNpc.get(stationId);
+        if (existingNpc != null && existingNpc != npc.getId()) {
+            npcToStation.remove(existingNpc);
+            NPC previousNpc = CitizensAPI.getNPCRegistry().getById(existingNpc);
+            if (previousNpc != null) {
+                previousNpc.data().remove(STATION_DATA_KEY);
+            }
+        }
+
+        npc.data().setPersistent(STATION_DATA_KEY, stationId);
+        npcToStation.put(npc.getId(), stationId);
+        stationToNpc.put(stationId, npc.getId());
+    }
+
     public void unregisterShopkeeper(int npcId) {
         String shopId = npcToShop.remove(npcId);
         if (shopId != null) {
@@ -142,6 +218,19 @@ public class CitizensUtils {
             NPC npc = CitizensAPI.getNPCRegistry().getById(npcId);
             if (npc != null) {
                 npc.data().remove(SHOP_DATA_KEY);
+            }
+        }
+    }
+
+    public void unregisterStationNpc(int npcId) {
+        String stationId = npcToStation.remove(npcId);
+        if (stationId != null) {
+            stationToNpc.remove(stationId);
+        }
+        if (allowedCitizens) {
+            NPC npc = CitizensAPI.getNPCRegistry().getById(npcId);
+            if (npc != null) {
+                npc.data().remove(STATION_DATA_KEY);
             }
         }
     }
@@ -164,5 +253,24 @@ public class CitizensUtils {
         return true;
     }
 
+    public boolean removeStationNpc(String stationId) {
+        if (!allowedCitizens) {
+            return false;
+        }
+        Integer npcId = stationToNpc.remove(stationId);
+        if (npcId == null) {
+            return false;
+        }
+        npcToStation.remove(npcId);
+        NPC npc = CitizensAPI.getNPCRegistry().getById(npcId);
+        if (npc == null) {
+            return false;
+        }
+        npc.data().remove(STATION_DATA_KEY);
+        npc.destroy();
+        return true;
+    }
+
     public record ShopkeeperCreationResult(int npcId, String name) {}
+    public record StationCreationResult(int npcId, String name) {}
 }

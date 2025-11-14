@@ -10,6 +10,7 @@ import org.bukkit.block.Block;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -18,14 +19,23 @@ import org.teenkung.neokeeper.Commands.CommandsHandler;
 import org.teenkung.neokeeper.Handlers.CitizensNPCListener;
 import org.teenkung.neokeeper.Handlers.EditGUIHandler;
 import org.teenkung.neokeeper.Handlers.TradeGUIHandler;
+import org.teenkung.neokeeper.Handlers.StationGUIHandler;
+import org.teenkung.neokeeper.GUIs.station.StationEditorListGUI;
+import org.teenkung.neokeeper.GUIs.station.StationPlayerListGUI;
+import org.teenkung.neokeeper.GUIs.station.StationPlayerRecipeGUI;
+import org.teenkung.neokeeper.GUIs.station.StationRecipeEditorGUI;
 import org.teenkung.neokeeper.Managers.Edit.EditInventoryManager;
 import org.teenkung.neokeeper.Managers.ShopManager;
+import org.teenkung.neokeeper.Managers.Stations.StationFeedbackConfig;
+import org.teenkung.neokeeper.Managers.Stations.StationManager;
 import org.teenkung.neokeeper.Managers.Trades.TradeInventoryManager;
 import org.teenkung.neokeeper.Utils.CitizensUtils;
 
 public final class NeoKeeper extends JavaPlugin {
 
     private ShopManager shopManager;
+    private StationManager stationManager;
+    private StationFeedbackConfig stationFeedback;
     private ConfigLoader configLoader;
     private CitizensUtils citizensUtils;
     private final String prefix = "<gray>[<gold>NeoKeeper<gray>] ";
@@ -34,11 +44,15 @@ public final class NeoKeeper extends JavaPlugin {
     public void onEnable() {
         this.configLoader = new ConfigLoader(this);
         this.shopManager = new ShopManager(this);
+        this.stationManager = new StationManager(this);
         this.citizensUtils = new CitizensUtils(this);
         shopManager.loadAllShop();
+        stationManager.loadStations();
+        this.stationFeedback = new StationFeedbackConfig(this);
 
         Bukkit.getPluginManager().registerEvents(new TradeGUIHandler(this), this);
         Bukkit.getPluginManager().registerEvents(new EditGUIHandler(this), this);
+        Bukkit.getPluginManager().registerEvents(new StationGUIHandler(this), this);
         if (citizensUtils.isAllowedCitizens()) {
             Bukkit.getPluginManager().registerEvents(new CitizensNPCListener(this), this);
         }
@@ -66,17 +80,31 @@ public final class NeoKeeper extends JavaPlugin {
                 entity.closeInventory();
             }
         }
+
+        Bukkit.getOnlinePlayers().forEach(player -> {
+            InventoryHolder holder = player.getOpenInventory().getTopInventory().getHolder();
+            if (holder instanceof StationPlayerListGUI.PlayerListHolder
+                    || holder instanceof StationPlayerRecipeGUI.PlayerRecipeHolder
+                    || holder instanceof StationEditorListGUI.EditorListHolder
+                    || holder instanceof StationRecipeEditorGUI.EditorRecipeHolder) {
+                player.closeInventory();
+            }
+        });
     }
 
     public void reload() {
         this.configLoader = new ConfigLoader(this);
         this.shopManager = new ShopManager(this);
+        this.stationManager = new StationManager(this);
         this.citizensUtils = new CitizensUtils(this);
         shopManager.loadAllShop();
-        CustomBlock.getBaseBlockData()
+        stationManager.loadStations();
+        this.stationFeedback = new StationFeedbackConfig(this);
     }
 
     public ShopManager getShopManager() { return shopManager; }
+    public StationManager getStationManager() { return stationManager; }
+    public StationFeedbackConfig getStationFeedback() { return stationFeedback; }
     public ConfigLoader getConfigLoader() { return configLoader; }
     public CitizensUtils getCitizensUtils() { return citizensUtils; }
 

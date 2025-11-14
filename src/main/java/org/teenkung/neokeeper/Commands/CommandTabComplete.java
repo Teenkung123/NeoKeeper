@@ -29,6 +29,7 @@ public class CommandTabComplete implements TabCompleter {
             result.add("remove");
             result.add("bindnpc");
             result.add("npc");
+            result.add("station");
         } else if (args.length == 2) {
             String arg = args[0].toLowerCase();
             if (arg.equalsIgnoreCase("edit") || arg.equalsIgnoreCase("open") || arg.equalsIgnoreCase("remove") || arg.equalsIgnoreCase("bindnpc")) {
@@ -40,10 +41,42 @@ public class CommandTabComplete implements TabCompleter {
             if (arg.equalsIgnoreCase("npc")) {
                 result.add("[title]");
             }
+            if (arg.equalsIgnoreCase("station")) {
+                result.add("open");
+                result.add("edit");
+                result.add("create");
+                result.add("remove");
+                result.add("npc");
+                result.add("bindnpc");
+            }
         } else if (args.length == 3) {
             String arg = args[0].toLowerCase();
             if (arg.equalsIgnoreCase("create")) {
                 result.add("[title]");
+            }
+            if (arg.equalsIgnoreCase("station")) {
+                String sub = args[1].toLowerCase();
+                if (sub.equals("open") || sub.equals("edit") || sub.equals("remove")) {
+                    result.addAll(plugin.getStationManager().getStationIds(false));
+                } else if (sub.equals("bindnpc")) {
+                    result.addAll(plugin.getStationManager().getStationIds(true));
+                } else if (sub.equals("create")) {
+                    result.add("<stationID>");
+                } else if (sub.equals("npc")) {
+                    result.add("[id|-]");
+                }
+            }
+        } else if (args.length == 4) {
+            String arg = args[0].toLowerCase();
+            if (arg.equalsIgnoreCase("station")) {
+                String sub = args[1].toLowerCase();
+                if (sub.equals("open")) {
+                    result.add("[player]");
+                } else if (sub.equals("create")) {
+                    result.add("[title]");
+                } else if (sub.equals("npc")) {
+                    result.add("[title]");
+                }
             }
         }
 

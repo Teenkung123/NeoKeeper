@@ -14,6 +14,12 @@ public class HelpCommand {
         player.sendMessage(plugin.colorize(plugin.getPrefix() + "    <green>/neokeeper remove <shopID>"));
         player.sendMessage(plugin.colorize(plugin.getPrefix() + "    <green>/neokeeper bindnpc <shopID>"));
         player.sendMessage(plugin.colorize(plugin.getPrefix() + "    <green>/neokeeper npc [title]"));
+        player.sendMessage(plugin.colorize(plugin.getPrefix() + "    <green>/neokeeper station npc [title]"));
+        player.sendMessage(plugin.colorize(plugin.getPrefix() + "    <green>/neokeeper station bindnpc <stationID>"));
+        player.sendMessage(plugin.colorize(plugin.getPrefix() + "    <green>/neokeeper station create <stationID> [title]"));
+        player.sendMessage(plugin.colorize(plugin.getPrefix() + "    <green>/neokeeper station open <stationID> [player]"));
+        player.sendMessage(plugin.colorize(plugin.getPrefix() + "    <green>/neokeeper station edit <stationID>"));
+        player.sendMessage(plugin.colorize(plugin.getPrefix() + "    <green>/neokeeper station remove <stationID>"));
         player.sendMessage(plugin.colorize(plugin.getPrefix() + "    <green>/neokeeper reload"));
         player.sendMessage(plugin.colorize(plugin.getPrefix() + "    <green>/neokeeper help"));
     }

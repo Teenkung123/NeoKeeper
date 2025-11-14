@@ -2,7 +2,6 @@ package org.teenkung.neokeeper.Handlers;
 
 import de.tr7zw.nbtapi.NBT;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -21,6 +20,7 @@ import org.teenkung.neokeeper.Managers.Trades.TradeInventoryManager;
 import org.teenkung.neokeeper.Managers.Trades.TradeInventoryStorage;
 import org.teenkung.neokeeper.Managers.Trades.TradeManager;
 import org.teenkung.neokeeper.NeoKeeper;
+import org.teenkung.neokeeper.Utils.ItemComparison;
 
 import java.util.HashMap;
 
@@ -83,7 +83,7 @@ public class TradeGUIHandler implements Listener {
             }
             if (event.getClickedInventory() == player.getInventory()) {
                 if (event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
-                    if (compare(new ItemManager(currentItem), inventoryManager.getTradeManagers().get(storage.selecting()).getRewardManager())) {
+                    if (ItemComparison.matches(new ItemManager(currentItem), inventoryManager.getTradeManagers().get(storage.selecting()).getRewardManager())) {
                         event.setCancelled(true);
                     }
                 }
@@ -160,7 +160,7 @@ public class TradeGUIHandler implements Listener {
         ItemManager q2Item = new ItemManager(clickedInventory.getItem(configLoader.getQuest2Slot()));
         for (int i = 0 ; i < inventoryManager.getTradeManagers().size() ; i++) {
             TradeManager tradeManager = inventoryManager.getTradeManagers().get(i);
-            if (compare(q1Item, tradeManager.getQuest1Manager()) && compare(q2Item, tradeManager.getQuest2Manager())) {
+            if (ItemComparison.matches(q1Item, tradeManager.getQuest1Manager()) && ItemComparison.matches(q2Item, tradeManager.getQuest2Manager())) {
                 storage.selecting(i);
                 return true;
             }
@@ -214,7 +214,7 @@ public class TradeGUIHandler implements Listener {
         // prevent player putting item back to reward slot
         if (event.getAction() == InventoryAction.PLACE_ONE || event.getAction() == InventoryAction.PLACE_ALL) {
             event.setCancelled(true);
-            if (compare (new ItemManager(event.getCursor()), rewardManager)) {
+            if (ItemComparison.matches(new ItemManager(event.getCursor()), rewardManager)) {
                 if (event.getCursor().getMaxStackSize() >= event.getCursor().getAmount() + rewardManager.getAmount()) {
                     event.getCursor().setAmount(event.getCursor().getAmount() + rewardManager.getAmount());
                     return true;
@@ -268,10 +268,10 @@ public class TradeGUIHandler implements Listener {
         boolean q1 = false;
         boolean q2 = false;
 
-        if (compare(new ItemManager(q1item), q1Manager) && q1amt >= q1Manager.getAmount()) {
+        if (ItemComparison.matches(new ItemManager(q1item), q1Manager) && q1amt >= q1Manager.getAmount()) {
             q1 = true;
         }
-        if (compare(new ItemManager(q2item), q2Manager) && q2amt >= q2Manager.getAmount()) {
+        if (ItemComparison.matches(new ItemManager(q2item), q2Manager) && q2amt >= q2Manager.getAmount()) {
             q2 = true;
         }
 
@@ -315,7 +315,7 @@ public class TradeGUIHandler implements Listener {
             if (item == null || item.getType().isAir()) continue;
 
             // Check quest 1
-            if (!completed_1 && (q1None || compare(new ItemManager(item), q1Manager))) {
+            if (!completed_1 && (q1None || ItemComparison.matches(new ItemManager(item), q1Manager))) {
                 if (!q1None) {
                     playerInv.setItem(i, null);
                     clickedInv.setItem(configLoader.getQuest1Slot(), item);
@@ -325,7 +325,7 @@ public class TradeGUIHandler implements Listener {
             }
 
             // Check quest 2
-            if (!completed_2 && (q2None || compare(new ItemManager(item), q2Manager))) {
+            if (!completed_2 && (q2None || ItemComparison.matches(new ItemManager(item), q2Manager))) {
                 if (!q2None) {
                     clickedInv.setItem(configLoader.getQuest2Slot(), item);
                     playerInv.setItem(i, null);
@@ -361,46 +361,6 @@ public class TradeGUIHandler implements Listener {
         if (q2 != null) {
             event.getClickedInventory().getItem(configLoader.getQuest2Slot()).setAmount(q2.getAmount() - manager.getQuest2Manager().getAmount());
         }
-    }
-
-    private boolean compare(ItemManager item1, ItemManager item2) {
-        // Always check stringItem and type first
-        boolean baseMatch = item1.getStringItem().equals(item2.getStringItem())
-                && item1.getType().equals(item2.getType());
-
-        if (!baseMatch) {
-            return false;
-        }
-
-        boolean item1HasName = item1.hasDisplayName();
-        boolean item2HasName = item2.hasDisplayName();
-        boolean item1HasItem = item1.getItem() != null;
-        boolean item2HasItem = item2.getItem() != null;
-
-        if (item1HasName && item2HasName) {
-            if (!PlainTextComponentSerializer.plainText().serialize(item1.getDisplayName()).equals(PlainTextComponentSerializer.plainText().serialize(item2.getDisplayName()))) {
-                return false;
-            }
-        }
-
-        // If one has and the other doesn't, they don't match
-        if (item1HasName != item2HasName) {
-            return false;
-        }
-
-        // If both have an item, but they're different, they don't match
-        if (item1HasItem && item2HasItem) {
-            if (item1.getItem().getType() != item2.getItem().getType()) {
-                return false;
-            }
-        }
-
-        // If one has and the other doesn't, they don't match
-        if (item1HasItem != item2HasItem) {
-            return false;
-        }
-
-        return true;
     }
 
 }

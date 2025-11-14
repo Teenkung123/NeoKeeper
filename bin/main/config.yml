@@ -1,52 +1,266 @@
 GUI:
-  DefaultTitle: "Default Title"
+  DefaultTitle: "&f:offset_-48:"
   Layout:
-    - NNNBBBBBB
-    - EETEBBDBB
-    - EETEBBFBB
-    - EETEBBBBB
-    - EETEBBBBB
-    - PPPBBBBBB
+    - PPPPBBBBB
+    - EEBEBBBBB
+    - EEBEBBBBB
+    - EEBEBBBBB
+    - EEBEBBBBB
+    - NNNNBBBBH
   Items:
     N:
-      Type: VANILLA
-      Item: LIME_STAINED_GLASS_PANE
-      Display: "&aNext Page"
-      Lore: []
-      ModelData: 0
+      Type: IA
+      Item: lemon_generic:invisible_item
     P:
-      Type: VANILLA
-      Item: RED_STAINED_GLASS_PANE
-      Display: "&cPrevious Page"
-      Lore: []
-      ModelData: 0
+      Type: IA
+      Item: lemon_generic:invisible_item
     B:
-      Type: VANILLA
-      Item: BLACK_STAINED_GLASS_PANE
-      Display: "&f"
-      Lore: []
-      ModelData: 0
-    D:
-      Type: VANILLA
-      Item: BLACK_STAINED_GLASS_PANE
-      Display: "&f"
-      Lore: []
-      ModelData: 1
-    F:
-      Type: VANILLA
-      Item: BLACK_STAINED_GLASS_PANE
-      Display: "&f"
-      Lore: []
-      ModelData: 2
+      Type: IA
+      Item: lemon_generic:invisible_item
+    A:
+      Type: IA
+      Item: lemon_generic:invisible_item
+    H:
+      Type: IA
+      Item: lemon_generic:invisible_item
+      Display: "<gradient:#fefefe:#f79459>วิธีการแลกของ</gradient>"
+      Lore:
+        - '&f1. กดเลือกไอเท็มที่ต้องการแลก'
+        - '&f2. ระบบจะเอาไอเท็มไปวางให้'
+        - '&f3. กด&aคลิกซ้าย&fที่ช่องผลลัพธ์ แล้วระบบจะแลกให้'
   Slot:
-    Quest1: 13
-    Quest2: 15
+    Quest1: 14
+    Quest2: 16
     Reward: 33
-    NextPage: [45, 46, 47]
-    PreviousPage: [0, 1, 2]
+    #Next/Previous page slot
+    NextPage: [45, 46, 47, 48]
+    PreviousPage: [0, 1, 2, 3]
     #Order: Q1, Q1, Reward
     Lists:
       - "9:10:12"
       - "18:19:21"
       - "27:28:30"
       - "36:37:39"
+
+Station:
+  Feedback:
+    Trade:
+      Success:
+        Message: "<green>Successfully crafted the item."
+        Sound:
+          Enabled: true
+          Name: ENTITY_PLAYER_LEVELUP
+          Volume: 1.0
+          Pitch: 1.2
+      Fail:
+        Message: "<red>You don't have the required materials."
+        Sound:
+          Enabled: true
+          Name: BLOCK_NOTE_BLOCK_BASS
+          Volume: 1.0
+          Pitch: 0.6
+    GUI:
+      Actions:
+        BACK:
+          Sound:
+            Enabled: true
+            Name: UI_BUTTON_CLICK
+            Volume: 0.5
+            Pitch: 1.0
+        NEXT:
+          Sound:
+            Enabled: true
+            Name: UI_BUTTON_CLICK
+            Volume: 0.5
+            Pitch: 1.2
+        PREVIOUS:
+          Sound:
+            Enabled: true
+            Name: UI_BUTTON_CLICK
+            Volume: 0.5
+            Pitch: 0.8
+        CLOSE:
+          Sound:
+            Enabled: true
+            Name: UI_BUTTON_CLICK
+            Volume: 0.5
+            Pitch: 0.7
+        SAVE:
+          Sound:
+            Enabled: true
+            Name: ENTITY_EXPERIENCE_ORB_PICKUP
+            Volume: 1.0
+            Pitch: 1.4
+        ADD:
+          Sound:
+            Enabled: true
+            Name: ENTITY_ITEM_PICKUP
+            Volume: 1.0
+            Pitch: 1.2
+        DELETE:
+          Sound:
+            Enabled: true
+            Name: BLOCK_ANVIL_BREAK
+            Volume: 0.7
+            Pitch: 0.8
+  Player:
+    List:
+      Title: "&f:offset_-8:"
+      Size: 54
+      RecipeSlots: [10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34]
+      RecipeLore:
+        Lines:
+          - "&7Materials:"
+          - "%materials%"
+        MaterialsEntry: "%status_prefix%&f- &e%amount%x %item%%status_suffix%"
+        MaterialsEmpty: "&8None configured"
+        StatusIndicator:
+          Enabled: true
+          Enough: "✔ "
+          Missing: "❌ "
+          Counts:
+            Enabled: true
+            Format: "&7[%have%/%need%]"
+      Items:
+        Background:
+          Type: VANILLA
+          Item: YELLOW_DYE
+          Display: "&7 "
+          Lore: []
+          ModelData: 2
+        Close:
+          Type: VANILLA
+          Item: YELLOW_DYE
+          Display: "&cClose"
+          Lore: []
+          ModelData: 2
+          Slots: [48, 49, 50]
+          Action: CLOSE
+        Next:
+          Type: VANILLA
+          Item: YELLOW_DYE
+          Display: "&aNext"
+          Lore: []
+          ModelData: 2
+          Slots: [17, 26, 35]
+          Action: NEXT
+        Previous:
+          Type: VANILLA
+          Item: YELLOW_DYE
+          Display: "&cPrevious"
+          Lore: []
+          ModelData: 2
+          Slots: [9, 18, 27]
+          Action: PREVIOUS
+    Recipe:
+      Title: "&f:offset_-8:"
+      Size: 54
+      MaterialSlots: [10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34]
+      ResultSlot: 39
+      MaterialNameSuffix: "&7[%have%/%need%]"
+      Items:
+        Background:
+          Type: VANILLA
+          Item: BLACK_STAINED_GLASS_PANE
+          Display: "&f "
+          Lore: []
+          ModelData: 0
+        Back:
+          Type: VANILLA
+          Item: ARROW
+          Display: "&cBack"
+          Lore: []
+          ModelData: 0
+          Slots: [48, 49, 50]
+          Action: BACK
+  Editor:
+    List:
+      Title: "&eEditing Station: %title%"
+      Size: 54
+      RecipeSlots: [10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34]
+      RecipeLore:
+        Lines:
+          - "&7Left-click: edit recipe"
+          - "&7Shift-right-click: delete"
+          - "&f"
+          - "&fMaterials:"
+          - "%materials%"
+        MaterialsEntry: "&e- %amount%x %item%"
+        MaterialsEmpty: "&8None configured"
+      Items:
+        Background:
+          Type: VANILLA
+          Item: LIGHT_GRAY_STAINED_GLASS_PANE
+          Display: "&f "
+          Lore: []
+          ModelData: 0
+        Add:
+          Type: VANILLA
+          Item: LIME_CONCRETE
+          Display: "&aAdd Recipe"
+          Lore: ["&7Create an empty recipe"]
+          ModelData: 0
+          Slot: 52
+          Action: ADD
+        Back:
+          Type: VANILLA
+          Item: BARRIER
+          Display: "&cClose"
+          Lore: []
+          ModelData: 0
+          Slot: 49
+          Action: CLOSE
+        Delete:
+          Type: VANILLA
+          Item: RED_WOOL
+          Display: "&cDelete Station"
+          Lore:
+            - "&7Remove the entire station"
+            - "&cThis cannot be undone"
+          ModelData: 0
+          Slot: 51
+          Action: DELETE
+        Next:
+          Type: VANILLA
+          Item: LIME_STAINED_GLASS_PANE
+          Display: "&aNext"
+          Lore: []
+          ModelData: 0
+          Slots: [50]
+          Action: NEXT
+        Previous:
+          Type: VANILLA
+          Item: RED_STAINED_GLASS_PANE
+          Display: "&cPrevious"
+          Lore: []
+          ModelData: 0
+          Slots: [48]
+          Action: PREVIOUS
+    Recipe:
+      Title: "&eRecipe Editor: %recipe%"
+      Size: 54
+      MaterialSlots: [10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34]
+      ResultSlot: 39
+      Items:
+        Background:
+          Type: VANILLA
+          Item: BLACK_STAINED_GLASS_PANE
+          Display: "&f "
+          Lore: []
+          ModelData: 0
+        Back:
+          Type: VANILLA
+          Item: ARROW
+          Display: "&cBack"
+          Lore: []
+          ModelData: 0
+          Slot: 45
+          Action: BACK
+        Save:
+          Type: VANILLA
+          Item: LIME_WOOL
+          Display: "&aSave"
+          Lore: ["&7Save current recipe"]
+          ModelData: 0
+          Slot: 53
+          Action: SAVE

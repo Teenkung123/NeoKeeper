@@ -1,0 +1,162 @@
+package org.teenkung.neokeeper.Managers.Stations;
+
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.teenkung.neokeeper.NeoKeeper;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
+public class StationManager {
+
+    public static final String NPC_STATION_PREFIX = "station_npc_";
+
+    private final NeoKeeper plugin;
+    private final File stationsFolder;
+    private Map<String, StationDefinition> stations;
+
+    public StationManager(NeoKeeper plugin) {
+        this.plugin = plugin;
+        this.stationsFolder = new File(plugin.getDataFolder(), "Stations");
+        this.stations = new LinkedHashMap<>();
+    }
+
+    public void loadStations() {
+        stations = new LinkedHashMap<>();
+        if (!ensureFolder()) {
+            return;
+        }
+        File[] files = stationsFolder.listFiles((dir, name) -> name.endsWith(".yml") || name.endsWith(".yaml"));
+        if (files == null) {
+            plugin.getLogger().warning("Failed to list station files.");
+            return;
+        }
+        for (File file : files) {
+            String id = file.getName().replaceAll("\\.(yml|yaml)$", "");
+            YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+            StationDefinition definition = new StationDefinition(plugin, file, config, id);
+            stations.put(id, definition);
+            plugin.getLogger().info("Loaded station " + id);
+        }
+        plugin.getLogger().info("Loaded " + stations.size() + " station(s).");
+    }
+
+    public Map<String, StationDefinition> getStations() {
+        return Collections.unmodifiableMap(stations);
+    }
+
+    public StationDefinition getStation(String id) {
+        return stations.get(id);
+    }
+
+    public StationDefinition createStation(String id, String title) {
+        if (!ensureFolder()) {
+            return null;
+        }
+        if (stations.containsKey(id)) {
+            plugin.getLogger().warning("Station " + id + " already exists.");
+            return stations.get(id);
+        }
+        File stationFile = new File(stationsFolder, id + ".yml");
+        if (stationFile.exists()) {
+            plugin.getLogger().warning("Station file for " + id + " already exists.");
+            return stations.get(id);
+        }
+        try {
+            if (!stationFile.createNewFile()) {
+                plugin.getLogger().severe("Could not create station file for " + id);
+                return null;
+            }
+            YamlConfiguration config = YamlConfiguration.loadConfiguration(stationFile);
+            config.createSection("Option");
+            config.set("Option.Title", title == null || title.isBlank() ? "Station" : title);
+            config.createSection("Recipes");
+            config.save(stationFile);
+
+            StationDefinition definition = new StationDefinition(plugin, stationFile, config, id);
+            stations.put(id, definition);
+            return definition;
+        } catch (IOException e) {
+            plugin.getLogger().severe("Failed to create station " + id + ": " + e.getMessage());
+        }
+        return null;
+    }
+
+    public StationDefinition createNpcStation(String title) {
+        return createNpcStation(title, null);
+    }
+
+    public StationDefinition createNpcStation(String title, String requestedId) {
+        String resolvedTitle = title == null || title.isBlank() ? "Station" : title;
+        String id = requestedId;
+        if (id == null || id.isBlank()) {
+            id = generateNpcStationId();
+            int attempts = 0;
+            while (stations.containsKey(id) && attempts++ < 10) {
+                id = generateNpcStationId();
+            }
+            if (stations.containsKey(id)) {
+                plugin.getLogger().severe("Failed to generate a unique station id for NPC.");
+                return null;
+            }
+        } else if (stations.containsKey(id)) {
+            plugin.getLogger().warning("Station " + id + " already exists.");
+            return null;
+        }
+        return createStation(id, resolvedTitle);
+    }
+
+    public boolean deleteStation(String id) {
+        StationDefinition station = stations.remove(id);
+        if (station == null) {
+            return false;
+        }
+        File file = station.getFile();
+        if (file.exists() && !file.delete()) {
+            plugin.getLogger().severe("Failed to delete station file for " + id);
+            return false;
+        }
+        return true;
+    }
+
+    public Set<String> getStationIds() {
+        return stations.keySet();
+    }
+
+    public Set<String> getStationIds(boolean includeGenerated) {
+        if (includeGenerated) {
+            return getStationIds();
+        }
+        Set<String> filtered = new LinkedHashSet<>();
+        for (String id : stations.keySet()) {
+            if (!isAutoGeneratedStationId(id)) {
+                filtered.add(id);
+            }
+        }
+        return filtered;
+    }
+
+    private boolean ensureFolder() {
+        if (stationsFolder.exists()) {
+            return true;
+        }
+        if (!stationsFolder.mkdirs()) {
+            plugin.getLogger().severe("Could not create Stations folder. Please check filesystem permissions.");
+            return false;
+        }
+        return true;
+    }
+
+    public boolean isAutoGeneratedStationId(String id) {
+        return id != null && id.startsWith(NPC_STATION_PREFIX);
+    }
+
+    private String generateNpcStationId() {
+        return NPC_STATION_PREFIX + UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+    }
+}
